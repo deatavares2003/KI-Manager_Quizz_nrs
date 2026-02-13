@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KI-Manager Prüfungsvorbereitung</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.2em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .theme-selector {
+            margin-bottom: 30px;
+        }
+        
+        .theme-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .theme-btn {
+            padding: 10px 20px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .theme-btn:hover {
+            background: #f0f4ff;
+            transform: translateY(-2px);
+        }
+        
+        .theme-btn.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .question-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .question-number {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .theme-badge {
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+        
+        .question-text {
+            font-size: 1.2em;
+            color: #333;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .answer-type {
+            display: inline-block;
+            background: #ffd93d;
+            color: #333;
+            padding: 4px 12px;
+            border-radius: 10px;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .option {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        
+        .option:hover {
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+        
+        .option.selected {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .option.correct-shown {
+            border-color: #4caf50;
+            background: #e8f5e9;
+        }
+        
+        .option.selected.incorrect-shown {
+            border-color: #f44336;
+            background: #ffebee;
+        }
+        
+        .option-letter {
+            background: #667eea;
+            color: white;
+            min-width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .option.correct-shown .option-letter {
+            background: #4caf50;
+        }
+        
+        .option.selected.incorrect-shown .option-letter {
+            background: #f44336;
+        }
+        
+        .option-text {
+            flex: 1;
+            line-height: 1.5;
+        }
+        
+        .answer-section {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .answer-section.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .answer-title {
+            font-weight: bold;
+            color: #856404;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .answer-content {
+            color: #333;
+            font-size: 1.05em;
+        }
+        
+        .correct-answers {
+            font-weight: bold;
+            color: #4caf50;
+            margin-top: 10px;
+        }
+        
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        .nav-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-check {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-check:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-next {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .btn-next:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(76, 175, 80, 0.4);
+        }
+        
+        .btn-prev {
+            background: #e0e0e0;
+            color: #333;
+        }
+        
+        .btn-prev:hover {
+            background: #d0d0d0;
+        }
+        
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50 0%, #8bc34a 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .results-screen {
+            display: none;
+            text-align: center;
+        }
+        
+        .results-screen.show {
+            display: block;
+        }
+        
+        .results-score {
+            font-size: 4em;
+            font-weight: bold;
+            color: #667eea;
+            margin: 30px 0;
+        }
+        
+        .results-message {
+            font-size: 1.3em;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .theme-results {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        
+        .theme-result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .theme-result-item:last-child {
+            border-bottom: none;
+        }
+        
+        .btn-restart {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        
+        .btn-restart:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .keyboard-hints {
+            text-align: center;
+            color: #999;
+            font-size: 0.85em;
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .keyboard-hints kbd {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            padding: 2px 6px;
+            font-family: monospace;
+            margin: 0 3px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .theme-buttons {
+                flex-direction: column;
+            }
+            
+            .navigation-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 KI-Manager Prüfung</h1>
+        <p class="subtitle">Original-Prüfungsfragen nach Themen sortiert</p>
+        
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-number" id="totalQuestions">60</div>
+                <div class="stat-label">Fragen gesamt</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="correctAnswers">0</div>
+                <div class="stat-label">Richtig</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="wrongAnswers">0</div>
+                <div class="stat-label">Falsch</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="currentScore">0%</div>
+                <div class="stat-label">Erfolgsquote</div>
+            </div>
+        </div>
+        
+        <div class="theme-selector">
+            <div class="theme-buttons">
+                <button class="theme-btn active" onclick="filterByTheme('all')">Alle Fragen</button>
+                <button class="theme-btn" onclick="filterByTheme('grundlagen')">Grundlagen KI/ML</button>
+                <button class="theme-btn" onclick="filterByTheme('daten')">Daten & Qualität</button>
+                <button class="theme-btn" onclick="filterByTheme('projektmanagement')">Projektmanagement</button>
+                <button class="theme-btn" onclick="filterByTheme('anwendungen')">Anwendungsfälle</button>
+                <button class="theme-btn" onclick="filterByTheme('technik')">Technische Vertiefung</button>
+                <button class="theme-btn" onclick="filterByTheme('ethik')">Ethik & Regulierung</button>
+            </div>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        
+        <div id="quizContent">
+            <div class="question-container" id="questionContainer">
+                <!-- Question will be loaded here -->
+            </div>
+            
+            <div class="navigation-buttons">
+                <button class="nav-btn btn-prev" id="prevBtn" onclick="prevQuestion()">← Zurück</button>
+                <div style="display: flex; gap: 10px;">
+                    <button class="nav-btn btn-check" id="checkBtn" onclick="checkAnswer()">Antwort prüfen</button>
+                    <button class="nav-btn btn-next" id="nextBtn" onclick="nextQuestion()" style="display: none;">Weiter →</button>
+                </div>
+            </div>
+            
+            <div class="keyboard-hints">
+                ⌨️ Tastenkürzel: <kbd>←</kbd> Zurück | <kbd>→</kbd> Weiter/Prüfen | <kbd>A-D</kbd> Antwort wählen
+            </div>
+        </div>
+        
+        <div class="results-screen" id="resultsScreen">
+            <h2 style="color: #667eea; font-size: 2.5em; margin-bottom: 20px;">🎉 Quiz abgeschlossen!</h2>
+            <div class="results-score" id="finalScore"></div>
+            <div class="results-message" id="resultsMessage"></div>
+            <div class="theme-results" id="themeResults"></div>
+            <button class="btn-restart" onclick="restartQuiz()">🔄 Nochmal versuchen</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            // GRUNDLAGEN KI/ML
+            { theme: 'grundlagen', number: 1, question: 'Was beschreibt Künstliche Intelligenz im Allgemeinen?', type: 'multiple', options: ['Systeme, die ausschließlich nach festen Regeln ohne Daten arbeiten', 'Systeme, die aus Daten lernen und Entscheidungen unterstützen', 'Programme, die nur mathematische Berechnungen durchführen', 'Maschinen, die ihre Umwelt wahrnehmen und Ziele verfolgen'], correct: [1, 3] },
+            { theme: 'grundlagen', number: 2, question: 'Was ist ein typisches Merkmal von Machine Learning?', type: 'multiple', options: ['Anpassung an neue Daten', 'Starre Entscheidungsbäume ohne Training', 'Verbesserung der Leistung durch Erfahrung', 'Ausschließliche Nutzung von Regelwerken'], correct: [0, 2] },
+            { theme: 'grundlagen', number: 3, question: 'Was unterscheidet KI von klassischer Softwareentwicklung?', type: 'multiple', options: ['KI basiert oft auf Daten statt festen Regeln', 'KI kann Muster in großen Datenmengen erkennen', 'KI benötigt grundsätzlich keine Software', 'KI ist vollständig deterministisch und unveränderlich'], correct: [0, 1] },
+            { theme: 'grundlagen', number: 11, question: 'Was beschreibt der Begriff „Deep Learning"?', type: 'multiple', options: ['Ein Teilbereich des maschinellen Lernens mit mehrschichtigen neuronalen Netzen', 'Ein Verfahren, das ausschließlich auf festen Regeln basiert', 'Eine Methode zur Mustererkennung in großen Datenmengen', 'Ein reines Datenbanksystem'], correct: [0, 2] },
+            { theme: 'grundlagen', number: 12, question: 'Welche Aussage zu starker und schwacher KI ist korrekt?', type: 'multiple', options: ['Schwache KI ist für spezifische Aufgaben entwickelt', 'Starke KI besitzt menschenähnliche allgemeine Intelligenz', 'Schwache KI kann jede menschliche Tätigkeit ersetzen', 'Starke KI existiert bereits im breiten Einsatz'], correct: [0, 1] },
+            { theme: 'grundlagen', number: 9, question: 'Was beschreibt überwachtes Lernen (Supervised Learning)?', type: 'multiple', options: ['Lernen mit gekennzeichneten Trainingsdaten', 'Lernen ohne jegliche Daten', 'Vorhersagen auf Basis gelernter Muster', 'Ausschließliches Clustern ohne Zielvariable'], correct: [0, 2] },
+            { theme: 'grundlagen', number: 22, question: 'Welche Aussage beschreibt unüberwachtes Lernen korrekt?', type: 'multiple', options: ['Lernen ohne gelabelte Daten', 'Bildung von Clustern oder Gruppen', 'Nutzung einer Zielvariable', 'Erkennung von Mustern in Daten'], correct: [0, 1, 3] },
+            { theme: 'grundlagen', number: 37, question: 'Welche Aussagen zum Reinforcement Learning sind korrekt?', type: 'multiple', options: ['Lernen durch Belohnung und Bestrafung', 'Nutzung von Feedback aus der Umgebung', 'Ausschließliches Lernen mit gelabelten Daten', 'Anwendung z. B. in Robotik oder Spielen'], correct: [0, 1, 3] },
+            
+            // DATEN & QUALITÄT
+            { theme: 'daten', number: 4, question: 'Welche Aussage zu Trainings-, Validierungs- und Testdaten ist korrekt?', type: 'multiple', options: ['Trainingsdaten dienen dem Lernen des Modells', 'Testdaten werden zur endgültigen Leistungsbewertung genutzt', 'Validierungsdaten ersetzen die Trainingsdaten vollständig', 'Testdaten sollten im Training nicht verwendet werden'], correct: [0, 1, 3] },
+            { theme: 'daten', number: 6, question: 'Welche Faktoren sind entscheidend für die Datenqualität in KI-Projekten?', type: 'multiple', options: ['Vollständigkeit der Daten', 'Zufällige Datenauswahl ohne Prüfung', 'Konsistenz der Daten', 'Relevanz für das Problem'], correct: [0, 2, 3] },
+            { theme: 'daten', number: 31, question: 'Was ist ein typisches Ziel von Feature Engineering?', type: 'multiple', options: ['Auswahl relevanter Merkmale', 'Verbesserung der Modellleistung', 'Zufällige Datengenerierung ohne Bezug zum Problem', 'Erstellung neuer aussagekräftiger Features'], correct: [0, 1, 3] },
+            { theme: 'daten', number: 45, question: 'Welche Eigenschaften zeichnen ein gutes Trainingsdatenset aus?', type: 'multiple', options: ['Repräsentativ für das Problem', 'Hohe Datenqualität', 'Zufällige, irrelevante Daten', 'Ausreichende Datenmenge'], correct: [0, 1, 3] },
+            { theme: 'daten', number: 49, question: 'Welche Aufgaben übernimmt die Datenvorverarbeitung?', type: 'multiple', options: ['Bereinigung fehlerhafter Daten', 'Normalisierung von Werten', 'Ignorieren fehlender Werte', 'Vorbereitung der Daten für das Training'], correct: [0, 1, 3] },
+            { theme: 'daten', number: 54, question: 'Welche Aufgaben übernimmt das Datenmanagement in KI-Projekten?', type: 'multiple', options: ['Strukturierung und Verwaltung von Daten', 'Sicherstellung der Datenqualität', 'Abschaffung von Datenschutzmaßnahmen', 'Bereitstellung relevanter Datenquellen'], correct: [0, 1, 3] },
+            { theme: 'daten', number: 38, question: 'Welche Herausforderungen gibt es bei Sensordaten in KI-Systemen?', type: 'multiple', options: ['Rauschen in den Messwerten', 'Datenverlust', 'Perfekte und fehlerfreie Messungen', 'Ungenaue Sensordaten'], correct: [0, 1, 3] },
+            
+            // PROJEKTMANAGEMENT
+            { theme: 'projektmanagement', number: 5, question: 'Was ist ein Ziel eines Proof-of-Concept (PoC) in KI-Projekten?', type: 'multiple', options: ['Nachweis der technischen Machbarkeit', 'Vollständige Unternehmensintegration', 'Erste Bewertung von Nutzen und Risiken', 'Sofortige Skalierung in alle Geschäftsbereiche'], correct: [0, 2] },
+            { theme: 'projektmanagement', number: 36, question: 'Welche Aufgaben hat ein Proof-of-Concept (PoC)?', type: 'multiple', options: ['Technische Machbarkeit prüfen', 'Erste Wirtschaftlichkeitsbewertung', 'Vollständige Produktivsetzung', 'Risikoanalyse im kleinen Rahmen'], correct: [0, 1, 3] },
+            { theme: 'projektmanagement', number: 13, question: 'Welche Schritte gehören typischerweise zur Entwicklung eines KI-Konzepts?', type: 'multiple', options: ['Zieldefinition', 'Datenbeschaffung', 'Auswahl eines geeigneten Modells', 'Sofortige Markteinführung ohne Tests'], correct: [0, 1, 2] },
+            { theme: 'projektmanagement', number: 14, question: 'Welche Herausforderungen treten häufig bei KI-Projekten auf?', type: 'multiple', options: ['Mangelnde Datenqualität', 'Fehlende Infrastruktur', 'Zu hohe Transparenz der Modelle', 'Unklare Zieldefinition'], correct: [0, 1, 3] },
+            { theme: 'projektmanagement', number: 27, question: 'Welche Schritte gehören zur Planungsphase eines KI-Projekts?', type: 'multiple', options: ['Definition von Meilensteinen', 'Budgetplanung', 'Auswahl von Projektmethoden', 'Sofortiger Produktivbetrieb ohne Planung'], correct: [0, 1, 2] },
+            { theme: 'projektmanagement', number: 43, question: 'Welche Aspekte sind wichtig bei der Zieldefinition eines KI-Projekts?', type: 'multiple', options: ['Spezifische Ziele', 'Messbare Ergebnisse', 'Unklare Anforderungen', 'Realistische Planung'], correct: [0, 1, 3] },
+            { theme: 'projektmanagement', number: 21, question: 'Was ist ein typisches Ziel von KPIs in KI-Projekten?', type: 'multiple', options: ['Messung der Leistungsfähigkeit des Systems', 'Ersatz aller Qualitätsprüfungen', 'Bewertung des Projekterfolgs', 'Kontrolle von Kosten und Nutzen'], correct: [0, 2, 3] },
+            { theme: 'projektmanagement', number: 10, question: 'Welche Aufgaben gehören zum Qualitätsmanagement in KI-Projekten?', type: 'multiple', options: ['Definition von KPIs', 'Überwachung der Modellleistung', 'Abschaffung von Tests zur Zeitersparnis', 'Durchführung regelmäßiger Audits'], correct: [0, 1, 3] },
+            { theme: 'projektmanagement', number: 56, question: 'Welche Maßnahmen gehören zur Qualitätssicherung in KI-Projekten?', type: 'multiple', options: ['Regelmäßige Audits', 'Überwachung von Modellkennzahlen', 'Vollständiger Verzicht auf Tests', 'Dokumentation der Ergebnisse'], correct: [0, 1, 3] },
+            { theme: 'projektmanagement', number: 7, question: 'Welche Rolle spielt Change-Management bei der Einführung von KI?', type: 'multiple', options: ['Reduzierung von Widerständen bei Mitarbeitern', 'Sicherstellung der technischen Infrastruktur', 'Aufbau von Vertrauen in neue Systeme', 'Ausschließliche Schulung der IT-Abteilung'], correct: [0, 2] },
+            { theme: 'projektmanagement', number: 19, question: 'Welche Maßnahmen erhöhen die Mitarbeiterakzeptanz von KI-Systemen?', type: 'multiple', options: ['Transparente Kommunikation', 'Schulungsmaßnahmen', 'Verzicht auf Information der Belegschaft', 'Einbindung der Mitarbeiter in den Einführungsprozess'], correct: [0, 1, 3] },
+            { theme: 'projektmanagement', number: 60, question: 'Welche Aufgaben gehören zur Schulung von Mitarbeitern bei der KI-Einführung?', type: 'multiple', options: ['Vermittlung von Grundverständnis für KI', 'Training im Umgang mit neuen Anwendungen', 'Verzicht auf Kommunikation über KI-Systeme', 'Unterstützung beim Aufbau von Vertrauen'], correct: [0, 1, 3] },
+            { theme: 'projektmanagement', number: 29, question: 'Welche Aufgaben erfüllt ein Rollout von KI-Systemen?', type: 'multiple', options: ['Einführung in den Echtbetrieb', 'Schulung der Nutzer', 'Abschaffung von Monitoring', 'Aufbau der notwendigen Infrastruktur'], correct: [0, 1, 3] },
+            { theme: 'projektmanagement', number: 39, question: 'Was gehört zu den Aufgaben des Monitorings nach dem Rollout?', type: 'multiple', options: ['Überwachung der Systemleistung', 'Erkennung von Fehlfunktionen', 'Abschalten aller Kontrollmechanismen', 'Kontinuierliche Verbesserung des Systems'], correct: [0, 1, 3] },
+            { theme: 'projektmanagement', number: 33, question: 'Welche Rolle spielt ein Projektmanager in KI-Projekten?', type: 'multiple', options: ['Koordination des Teams', 'Planung von Budget und Zeit', 'Training der neuronalen Netze im Detail', 'Kommunikation mit Stakeholdern'], correct: [0, 1, 3] },
+            { theme: 'projektmanagement', number: 23, question: 'Was ist eine typische Aufgabe eines Data Scientists in KI-Projekten?', type: 'multiple', options: ['Datenanalyse und Modelltraining', 'Entwicklung von Hardwarekomponenten', 'Auswahl geeigneter Algorithmen', 'Interpretation von Modellergebnissen'], correct: [0, 2, 3] },
+            { theme: 'projektmanagement', number: 47, question: 'Welche Rolle spielen Stakeholder in KI-Projekten?', type: 'multiple', options: ['Definition von Anforderungen', 'Bewertung des Projektnutzens', 'Vollständiger Ausschluss aus Entscheidungsprozessen', 'Unterstützung bei der Einführung'], correct: [0, 1, 3] },
+            { theme: 'projektmanagement', number: 52, question: 'Welche Vorteile bietet die Zusammenarbeit in interdisziplinären KI-Teams?', type: 'multiple', options: ['Kombination unterschiedlicher Fachperspektiven', 'Reduzierung der Projektkosten auf null', 'Ganzheitlichere Problemlösungen', 'Automatische Vermeidung aller Risiken'], correct: [0, 2] },
+            { theme: 'projektmanagement', number: 28, question: 'Was ist ein typisches Risiko beim Einsatz von KI-Systemen?', type: 'multiple', options: ['Bias in Trainingsdaten', 'Fehlende Transparenz von Entscheidungen', 'Vollständige Fehlerfreiheit', 'Abhängigkeit von Datenqualität'], correct: [0, 1, 3] },
+            { theme: 'projektmanagement', number: 58, question: 'Was ist ein wichtiger Bestandteil des Risikomanagements in KI-Projekten?', type: 'multiple', options: ['Frühzeitige Risikoidentifikation', 'Integration von Risiken in die Planung', 'Ignorieren potenzieller Fehlentscheidungen', 'Laufende Risikoüberwachung'], correct: [0, 1, 3] },
+            { theme: 'projektmanagement', number: 50, question: 'Welche Ziele verfolgt die Einführung von KI im Unternehmen?', type: 'multiple', options: ['Automatisierung von Prozessen', 'Effizienzsteigerung', 'Vermeidung jeglicher Datennutzung', 'Verbesserung der Entscheidungsqualität'], correct: [0, 1, 3] },
+            
+            // ANWENDUNGSFÄLLE
+            { theme: 'anwendungen', number: 8, question: 'Was ist ein typischer Use Case von KI im Handel?', type: 'multiple', options: ['Personalisierte Produktempfehlungen', 'Dynamische Preisgestaltung', 'Manuelle Lagerverwaltung ohne Daten', 'Betrugserkennung im Online-Shop'], correct: [0, 1, 3] },
+            { theme: 'anwendungen', number: 57, question: 'Welche Vorteile bietet KI im Handel?', type: 'multiple', options: ['Personalisierte Produktempfehlungen', 'Dynamische Preisgestaltung', 'Automatische Abschaffung von Lagerhaltung', 'Betrugserkennung im E-Commerce'], correct: [0, 1, 3] },
+            { theme: 'anwendungen', number: 20, question: 'Was ist ein typischer Anwendungsfall von KI im Finanzsektor?', type: 'multiple', options: ['Betrugserkennung', 'Kreditrisikobewertung', 'Manuelle Berechnung ohne Datenanalyse', 'Automatisierte Anlageberatung'], correct: [0, 1, 3] },
+            { theme: 'anwendungen', number: 53, question: 'Was ist ein typischer Einsatz von KI im Bankenbereich?', type: 'multiple', options: ['Betrugserkennung bei Transaktionen', 'Mechanische Archivierung von Papierakten', 'Kreditrisikoanalyse', 'Ersatz aller Finanzberater durch Roboter'], correct: [0, 2] },
+            { theme: 'anwendungen', number: 35, question: 'Was ist ein typischer Anwendungsfall von KI im HR-Bereich?', type: 'multiple', options: ['Automatische Analyse von Bewerbungen', 'Chatbots für Mitarbeiteranfragen', 'Manuelle Sichtung aller Daten ohne Unterstützung', 'Prognose von Personalbedarf'], correct: [0, 1, 3] },
+            { theme: 'anwendungen', number: 44, question: 'Welche typischen Aufgaben hat ein KI-System im Kundenservice?', type: 'multiple', options: ['Beantwortung von Standardanfragen', 'Automatisierte Terminvereinbarung', 'Vollständiger Verzicht auf Kundenkontakt', 'Analyse von Kundenfeedback'], correct: [0, 1, 3] },
+            { theme: 'anwendungen', number: 26, question: 'Welche Vorteile bietet KI im Dienstleistungsbereich?', type: 'multiple', options: ['Automatisierte Kundenanfragen', 'Vorhersage von Kundenbedürfnissen', 'Vollständiger Verzicht auf menschlichen Service', 'Analyse von Kundenfeedback'], correct: [0, 1, 3] },
+            { theme: 'anwendungen', number: 15, question: 'Was ist ein typischer Einsatz von KI im Qualitätsmanagement?', type: 'multiple', options: ['Vorhersage von Produktionsfehlern', 'Automatische Erkennung von Abweichungen', 'Ausschließlich manuelle Prüfprozesse', 'Echtzeitüberwachung von Prozessen'], correct: [0, 1, 3] },
+            { theme: 'anwendungen', number: 17, question: 'Welche Vorteile bietet KI in der Produktion?', type: 'multiple', options: ['Predictive Maintenance', 'Optimierung von Produktionsabläufen', 'Vollständiger Verzicht auf Daten', 'Automatisierte Qualitätsprüfung'], correct: [0, 1, 3] },
+            { theme: 'anwendungen', number: 46, question: 'Was ist ein typisches Ziel von Predictive Maintenance?', type: 'multiple', options: ['Vorhersage von Ausfällen', 'Reduzierung von Stillstandzeiten', 'Vollständiger Verzicht auf Wartung', 'Optimierung von Wartungsintervallen'], correct: [0, 1, 3] },
+            { theme: 'anwendungen', number: 41, question: 'Welche Vorteile bietet KI im Controlling?', type: 'multiple', options: ['Finanzprognosen', 'Automatisierte Budgetplanung', 'Verzicht auf alle Kennzahlen', 'Analyse großer Datenmengen'], correct: [0, 1, 3] },
+            { theme: 'anwendungen', number: 16, question: 'Welche Aufgaben erfüllt Natural Language Processing (NLP)?', type: 'multiple', options: ['Analyse natürlicher Sprache', 'Generierung von Texten', 'Steuerung von mechanischen Produktionsanlagen', 'Klassifikation von Textinhalten'], correct: [0, 1, 3] },
+            { theme: 'anwendungen', number: 40, question: 'Welche Aussagen zur Sentimentanalyse sind korrekt?', type: 'multiple', options: ['Analyse der Stimmung in Texten', 'Anwendung im Kundenfeedback', 'Ausschließlich Bildverarbeitung', 'Teilbereich des NLP'], correct: [0, 1, 3] },
+            { theme: 'anwendungen', number: 30, question: 'Welche Technologien werden häufig im Internet of Things (IoT) mit KI kombiniert?', type: 'multiple', options: ['Sensoren zur Datenerfassung', 'Cloud- oder Edge-Computing', 'Mechanische Schreibmaschinen', 'Vernetzte Geräte und Systeme'], correct: [0, 1, 3] },
+            
+            // TECHNISCHE VERTIEFUNG
+            { theme: 'technik', number: 25, question: 'Welche Aussagen zu neuronalen Netzen sind korrekt?', type: 'multiple', options: ['Sie bestehen aus verbundenen künstlichen Neuronen', 'Sie erkennen Muster in Daten', 'Sie funktionieren ausschließlich ohne Trainingsdaten', 'Sie werden häufig im Deep Learning eingesetzt'], correct: [0, 1, 3] },
+            { theme: 'technik', number: 42, question: 'Was ist ein wesentliches Merkmal eines Convolutional Neural Networks (CNN)?', type: 'multiple', options: ['Besonders geeignet für Bildverarbeitung', 'Nutzung von Faltungsoperationen', 'Ausschließlich für Textdaten entwickelt', 'Erkennung visueller Muster'], correct: [0, 1, 3] },
+            { theme: 'technik', number: 55, question: 'Welche Aussagen zu Recurrent Neural Networks (RNNs) sind korrekt?', type: 'multiple', options: ['Sie sind für sequenzielle Daten geeignet', 'Sie werden häufig in Sprachverarbeitung eingesetzt', 'Sie funktionieren ausschließlich mit Bilddaten', 'Sie berücksichtigen frühere Zustände im Modell'], correct: [0, 1, 3] },
+            { theme: 'technik', number: 32, question: 'Welche Aussage zu Overfitting ist korrekt?', type: 'multiple', options: ['Das Modell lernt Trainingsdaten zu genau', 'Das Modell generalisiert gut auf neue Daten', 'Das Modell erkennt auch Rauschen als Muster', 'Das Modell hat eine zu hohe Komplexität'], correct: [0, 2, 3] },
+            { theme: 'technik', number: 34, question: 'Welche Vorteile bietet Transfer Learning?', type: 'multiple', options: ['Nutzung vortrainierter Modelle', 'Schnellere Entwicklung neuer Anwendungen', 'Vollständiger Verzicht auf Trainingsdaten', 'Reduzierter Rechenaufwand'], correct: [0, 1, 3] },
+            { theme: 'technik', number: 48, question: 'Welche Vorteile bietet Edge Computing in KI-Anwendungen?', type: 'multiple', options: ['Verarbeitung von Daten nahe an der Quelle', 'Reduzierung von Latenzzeiten', 'Ausschließliche Nutzung zentraler Rechenzentren'], correct: [0, 1] },
+            { theme: 'technik', number: 51, question: 'Welche Aussage beschreibt das Black-Box-Problem bei KI-Systemen?', type: 'multiple', options: ['Entscheidungen des Modells sind oft schwer nachvollziehbar', 'Das Modell arbeitet ausschließlich mit festen Regeln', 'Die internen Entscheidungsprozesse sind nicht transparent', 'Das Modell kann keine Daten verarbeiten'], correct: [0, 2] },
+            { theme: 'technik', number: 59, question: 'Welche Aussage zur Modellvalidierung ist korrekt?', type: 'single', options: ['Sie dient ausschließlich der Datenspeicherung', 'Sie überprüft die Leistungsfähigkeit eines Modells', 'Sie ersetzt das Training vollständig', 'Sie wird nur bei Hardwaretests eingesetzt'], correct: [1] },
+            
+            // ETHIK & REGULIERUNG
+            { theme: 'ethik', number: 18, question: 'Was ist ein wesentliches Ziel der EU-KI-Verordnung?', type: 'multiple', options: ['Förderung von Innovation', 'Schutz von Gesundheit und Sicherheit', 'Verbot jeglicher KI-Systeme', 'Schaffung eines einheitlichen Rechtsrahmens'], correct: [0, 1, 3] },
+            { theme: 'ethik', number: 24, question: 'Welche Aspekte sind Teil der ethischen Leitlinien für KI?', type: 'multiple', options: ['Fairness', 'Transparenz', 'Maximale Datensammlung ohne Einschränkung', 'Verantwortung für Entscheidungen'], correct: [0, 1, 3] }
+        ];
+
+        let currentQuestionIndex = 0;
+        let filteredQuestions = [...questions];
+        let selectedAnswers = [];
+        let answered = false;
+        let stats = {
+            correct: 0,
+            wrong: 0,
+            byTheme: {}
+        };
+
+        // Initialize theme stats
+        const themes = ['grundlagen', 'daten', 'projektmanagement', 'anwendungen', 'technik', 'ethik'];
+        themes.forEach(theme => {
+            stats.byTheme[theme] = { correct: 0, total: 0 };
+        });
+        questions.forEach(q => {
+            stats.byTheme[q.theme].total++;
+        });
+
+        function loadQuestion() {
+            const q = filteredQuestions[currentQuestionIndex];
+            selectedAnswers = [];
+            answered = false;
+            
+            const container = document.getElementById('questionContainer');
+            
+            const typeText = q.type === 'multiple' ? '(Mehrfachauswahl)' : '(Einzelauswahl)';
+            
+            let html = `
+                <div class="question-header">
+                    <div class="question-number">Frage ${q.number}</div>
+                    <div class="theme-badge">${getThemeName(q.theme)}</div>
+                </div>
+                <div class="question-text">
+                    ${q.question}
+                    <span class="answer-type">${typeText}</span>
+                </div>
+                <div class="options">
+            `;
+            
+            q.options.forEach((option, index) => {
+                html += `
+                    <div class="option" onclick="selectOption(${index})">
+                        <div class="option-letter">${String.fromCharCode(65 + index)}</div>
+                        <div class="option-text">${option}</div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                </div>
+                <div class="answer-section" id="answerSection">
+                    <div class="answer-title">✅ Richtige Antwort(en):</div>
+                    <div class="answer-content">
+                        <div class="correct-answers" id="correctAnswerText"></div>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+            
+            updateProgress();
+            updateButtons();
+        }
+
+        function selectOption(index) {
+            if (answered) return;
+            
+            const q = filteredQuestions[currentQuestionIndex];
+            const options = document.querySelectorAll('.option');
+            
+            if (q.type === 'single') {
+                selectedAnswers = [index];
+                options.forEach((opt, i) => {
+                    opt.classList.remove('selected');
+                    if (i === index) opt.classList.add('selected');
+                });
+            } else {
+                const idx = selectedAnswers.indexOf(index);
+                if (idx > -1) {
+                    selectedAnswers.splice(idx, 1);
+                    options[index].classList.remove('selected');
+                } else {
+                    selectedAnswers.push(index);
+                    options[index].classList.add('selected');
+                }
+            }
+        }
+
+        function checkAnswer() {
+            if (selectedAnswers.length === 0) {
+                alert('Bitte wähle mindestens eine Antwort aus!');
+                return;
+            }
+            
+            answered = true;
+            const q = filteredQuestions[currentQuestionIndex];
+            const options = document.querySelectorAll('.option');
+            
+            // Show correct answers
+            options.forEach((opt, i) => {
+                if (q.correct.includes(i)) {
+                    opt.classList.add('correct-shown');
+                } else if (selectedAnswers.includes(i)) {
+                    opt.classList.add('incorrect-shown');
+                }
+                opt.style.pointerEvents = 'none';
+            });
+            
+            // Check if answer is correct
+            const isCorrect = selectedAnswers.length === q.correct.length &&
+                            selectedAnswers.every(a => q.correct.includes(a));
+            
+            if (isCorrect) {
+                stats.correct++;
+                stats.byTheme[q.theme].correct++;
+            } else {
+                stats.wrong++;
+            }
+            
+            // Show answer explanation
+            const correctText = q.correct.map(i => 
+                `${String.fromCharCode(65 + i)}: ${q.options[i]}`
+            ).join('<br>');
+            
+            document.getElementById('correctAnswerText').innerHTML = correctText;
+            document.getElementById('answerSection').classList.add('show');
+            
+            updateStats();
+            
+            document.getElementById('checkBtn').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'inline-block';
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < filteredQuestions.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion();
+                document.getElementById('checkBtn').style.display = 'inline-block';
+                document.getElementById('nextBtn').style.display = 'none';
+            } else {
+                showResults();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuestion();
+                document.getElementById('checkBtn').style.display = 'inline-block';
+                document.getElementById('nextBtn').style.display = 'none';
+            }
+        }
+
+        function updateProgress() {
+            const progress = ((currentQuestionIndex + 1) / filteredQuestions.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        function updateButtons() {
+            document.getElementById('prevBtn').disabled = currentQuestionIndex === 0;
+        }
+
+        function updateStats() {
+            document.getElementById('correctAnswers').textContent = stats.correct;
+            document.getElementById('wrongAnswers').textContent = stats.wrong;
+            const total = stats.correct + stats.wrong;
+            const percentage = total > 0 ? Math.round((stats.correct / total) * 100) : 0;
+            document.getElementById('currentScore').textContent = percentage + '%';
+        }
+
+        function filterByTheme(theme) {
+            // Update active button
+            document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Filter questions
+            if (theme === 'all') {
+                filteredQuestions = [...questions];
+            } else {
+                filteredQuestions = questions.filter(q => q.theme === theme);
+            }
+            
+            // Reset
+            currentQuestionIndex = 0;
+            document.getElementById('totalQuestions').textContent = filteredQuestions.length;
+            loadQuestion();
+        }
+
+        function getThemeName(theme) {
+            const names = {
+                'grundlagen': 'Grundlagen KI/ML',
+                'daten': 'Daten & Qualität',
+                'projektmanagement': 'Projektmanagement',
+                'anwendungen': 'Anwendungsfälle',
+                'technik': 'Technische Vertiefung',
+                'ethik': 'Ethik & Regulierung'
+            };
+            return names[theme] || theme;
+        }
+
+        function showResults() {
+            document.getElementById('quizContent').style.display = 'none';
+            document.getElementById('resultsScreen').classList.add('show');
+            
+            const total = stats.correct + stats.wrong;
+            const percentage = Math.round((stats.correct / total) * 100);
+            
+            document.getElementById('finalScore').textContent = `${percentage}%`;
+            
+            let message = '';
+            if (percentage >= 90) {
+                message = '🌟 Exzellent! Du bist perfekt vorbereitet für die Prüfung!';
+            } else if (percentage >= 75) {
+                message = '👍 Sehr gut! Du hast ein solides Verständnis.';
+            } else if (percentage >= 60) {
+                message = '📚 Gut! Wiederhole die schwachen Themen nochmal.';
+            } else {
+                message = '💪 Weiter üben! Konzentriere dich auf die Grundlagen.';
+            }
+            document.getElementById('resultsMessage').textContent = message;
+            
+            // Theme breakdown
+            let themeHTML = '<h3 style="margin-bottom: 15px;">📊 Ergebnisse nach Thema:</h3>';
+            for (const [theme, data] of Object.entries(stats.byTheme)) {
+                if (data.total > 0) {
+                    const themePercent = Math.round((data.correct / data.total) * 100);
+                    const emoji = themePercent >= 75 ? '✅' : themePercent >= 50 ? '⚠️' : '❌';
+                    themeHTML += `
+                        <div class="theme-result-item">
+                            <span>${emoji} ${getThemeName(theme)}</span>
+                            <span><strong>${data.correct}/${data.total}</strong> (${themePercent}%)</span>
+                        </div>
+                    `;
+                }
+            }
+            document.getElementById('themeResults').innerHTML = themeHTML;
+        }
+
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            stats = {
+                correct: 0,
+                wrong: 0,
+                byTheme: {}
+            };
+            themes.forEach(theme => {
+                stats.byTheme[theme] = { correct: 0, total: 0 };
+            });
+            questions.forEach(q => {
+                stats.byTheme[q.theme].total++;
+            });
+            
+            updateStats();
+            document.getElementById('resultsScreen').classList.remove('show');
+            document.getElementById('quizContent').style.display = 'block';
+            loadQuestion();
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') prevQuestion();
+            if (e.key === 'ArrowRight') {
+                if (answered) {
+                    nextQuestion();
+                } else {
+                    checkAnswer();
+                }
+            }
+            
+            // A-D keys for selecting options
+            const key = e.key.toUpperCase();
+            if (key >= 'A' && key <= 'D' && !answered) {
+                const index = key.charCodeAt(0) - 65;
+                const q = filteredQuestions[currentQuestionIndex];
+                if (index < q.options.length) {
+                    selectOption(index);
+                }
+            }
+        });
+
+        // Initialize
+        loadQuestion();
+    </script>
+</body>
+</html>

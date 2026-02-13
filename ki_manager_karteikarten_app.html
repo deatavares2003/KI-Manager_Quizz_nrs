@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KI-Manager Digitale Karteikarten</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 900px;
+            width: 100%;
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.2em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+        
+        .filter-btn:hover {
+            background: #f0f4ff;
+        }
+        
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .progress-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .card-counter {
+            font-size: 1.1em;
+            color: #333;
+            font-weight: bold;
+        }
+        
+        .shuffle-btn {
+            background: #764ba2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .shuffle-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(118, 75, 162, 0.4);
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .flashcard-container {
+            perspective: 1000px;
+            margin-bottom: 30px;
+        }
+        
+        .flashcard {
+            position: relative;
+            width: 100%;
+            min-height: 400px;
+            cursor: pointer;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+        }
+        
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+        
+        .card-face {
+            position: absolute;
+            width: 100%;
+            min-height: 400px;
+            backface-visibility: hidden;
+            border-radius: 15px;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .card-front {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .card-back {
+            background: white;
+            border: 3px solid #667eea;
+            transform: rotateY(180deg);
+            color: #333;
+        }
+        
+        .category-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.3);
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .card-back .category-badge {
+            background: #f0f4ff;
+            color: #667eea;
+        }
+        
+        .priority-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+        
+        .priority-must {
+            background: #ff6b6b;
+            color: white;
+        }
+        
+        .priority-should {
+            background: #ffd93d;
+            color: #333;
+        }
+        
+        .priority-nice {
+            background: #95e1d3;
+            color: #333;
+        }
+        
+        .card-title {
+            font-size: 2em;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .card-content {
+            font-size: 1.2em;
+            line-height: 1.8;
+            max-width: 700px;
+        }
+        
+        .card-example {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            border-radius: 5px;
+            font-style: italic;
+            text-align: left;
+        }
+        
+        .example-label {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .flip-hint {
+            margin-top: 30px;
+            font-size: 0.9em;
+            opacity: 0.8;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 0.4; }
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .nav-btn {
+            flex: 1;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .nav-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        
+        .btn-prev {
+            background: #e0e0e0;
+            color: #333;
+        }
+        
+        .btn-prev:hover:not(:disabled) {
+            background: #d0d0d0;
+            transform: translateX(-5px);
+        }
+        
+        .btn-next {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-next:hover:not(:disabled) {
+            transform: translateX(5px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .mastery-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .mastery-btn {
+            padding: 10px 20px;
+            border: 2px solid;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .mastery-hard {
+            border-color: #ff6b6b;
+            color: #ff6b6b;
+        }
+        
+        .mastery-hard:hover {
+            background: #ff6b6b;
+            color: white;
+        }
+        
+        .mastery-good {
+            border-color: #ffd93d;
+            color: #d4a400;
+        }
+        
+        .mastery-good:hover {
+            background: #ffd93d;
+            color: #333;
+        }
+        
+        .mastery-easy {
+            border-color: #51cf66;
+            color: #51cf66;
+        }
+        
+        .mastery-easy:hover {
+            background: #51cf66;
+            color: white;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .keyboard-hints {
+            text-align: center;
+            color: #999;
+            font-size: 0.85em;
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .keyboard-hints kbd {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            padding: 2px 6px;
+            font-family: monospace;
+            margin: 0 3px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .card-title {
+                font-size: 1.5em;
+            }
+            
+            .card-content {
+                font-size: 1em;
+            }
+            
+            .navigation {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎴 KI-Manager Karteikarten</h1>
+        <p class="subtitle">Klicke auf die Karte zum Umdrehen | Navigiere mit Pfeiltasten ← →</p>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-number" id="totalCards">65</div>
+                <div class="stat-label">Karten gesamt</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="hardCards">0</div>
+                <div class="stat-label">Schwierig</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="goodCards">0</div>
+                <div class="stat-label">Mittel</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="easyCards">0</div>
+                <div class="stat-label">Einfach</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="filter-buttons">
+                <button class="filter-btn active" onclick="filterCards('all')">Alle</button>
+                <button class="filter-btn" onclick="filterCards('must')">MUST-KNOW</button>
+                <button class="filter-btn" onclick="filterCards('should')">SHOULD-KNOW</button>
+                <button class="filter-btn" onclick="filterCards('nice')">NICE-TO-KNOW</button>
+                <button class="filter-btn" onclick="filterCards('hard')">Nur Schwierige</button>
+            </div>
+            
+            <div class="progress-info">
+                <div class="card-counter" id="cardCounter">1 / 65</div>
+                <button class="shuffle-btn" onclick="shuffleCards()">🔀 Mischen</button>
+            </div>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        
+        <div class="flashcard-container">
+            <div class="flashcard" id="flashcard" onclick="flipCard()">
+                <div class="card-face card-front">
+                    <div class="category-badge" id="categoryFront"></div>
+                    <div>
+                        <span id="priorityBadge"></span>
+                    </div>
+                    <div class="card-title" id="cardTitleFront"></div>
+                    <div class="flip-hint">👆 Klicke zum Umdrehen</div>
+                </div>
+                
+                <div class="card-face card-back">
+                    <div class="category-badge" id="categoryBack"></div>
+                    <div class="card-content" id="cardContent"></div>
+                    <div class="card-example" id="cardExample" style="display: none;">
+                        <div class="example-label">📌 Beispiel:</div>
+                        <div id="exampleText"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mastery-buttons">
+            <button class="mastery-btn mastery-hard" onclick="markCard('hard')">❌ Schwierig</button>
+            <button class="mastery-btn mastery-good" onclick="markCard('good')">⚠️ Mittel</button>
+            <button class="mastery-btn mastery-easy" onclick="markCard('easy')">✅ Einfach</button>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-btn btn-prev" id="prevBtn" onclick="prevCard()">
+                ← Zurück
+            </button>
+            <button class="nav-btn btn-next" id="nextBtn" onclick="nextCard()">
+                Weiter →
+            </button>
+        </div>
+        
+        <div class="keyboard-hints">
+            ⌨️ Tastenkürzel: <kbd>←</kbd> Zurück | <kbd>→</kbd> Weiter | <kbd>Leertaste</kbd> Umdrehen | <kbd>1</kbd> Schwierig | <kbd>2</kbd> Mittel | <kbd>3</kbd> Einfach
+        </div>
+    </div>
+
+    <script>
+        const flashcards = [
+            // MUST-KNOW (Fundament)
+            { category: "Grundlagen", priority: "must", title: "Was ist Künstliche Intelligenz?", content: "Systeme, die menschenähnliche Intelligenzleistungen erbringen: Lernen, Problemlösung, Mustererkennung, Entscheidungsfindung", example: "Spracherkennung (Siri), Bilderkennung (Google Fotos), Empfehlungssysteme (Netflix)" },
+            
+            { category: "Grundlagen", priority: "must", title: "Unterschied Schwache vs. Starke KI", content: "• Schwache KI (ANI): Spezialisiert auf EINE Aufgabe (z.B. Schach, Spracherkennung)\n• Starke KI (AGI): Hypothetisch - menschenähnliche Intelligenz über ALLE Bereiche\n\nWichtig: Alle aktuellen KI-Systeme sind schwache KI!", example: "ChatGPT ist schwache KI - trotz beeindruckender Fähigkeiten nur für Textaufgaben" },
+            
+            { category: "Machine Learning", priority: "must", title: "KI vs. ML vs. Deep Learning", content: "Hierarchie (Matroschka-Prinzip):\n• KI (größter Kreis): Alle intelligenten Systeme\n• Machine Learning (mittlerer Kreis): KI die aus Daten lernt\n• Deep Learning (kleinster Kreis): ML mit neuronalen Netzen (mehrere Schichten)", example: "DL ⊂ ML ⊂ KI" },
+            
+            { category: "Machine Learning", priority: "must", title: "Supervised vs. Unsupervised vs. Reinforcement Learning", content: "• Supervised: Lernen mit Labels (Katze/Hund-Bilder markiert)\n• Unsupervised: Muster finden ohne Labels (Kundensegmentierung)\n• Reinforcement: Lernen durch Belohnung (Spiele, Robotik)", example: "Spam-Filter = Supervised (E-Mails als Spam/kein Spam markiert)" },
+            
+            { category: "Bias", priority: "must", title: "Was ist Bias in KI?", content: "Systematische Verzerrungen in KI-Entscheidungen durch:\n• Voreingenommene Trainingsdaten\n• Algorithmus-Design\n• Historische gesellschaftliche Vorurteile", example: "Gesichtserkennung funktioniert schlechter bei dunkelhäutigen Menschen (nicht diverse Trainingsdaten)" },
+            
+            { category: "Bias", priority: "must", title: "Arten von Bias", content: "• Daten-Bias: Trainingsdaten nicht repräsentativ\n• Algorithmus-Bias: Modell verstärkt Muster\n• Interaktions-Bias: Nutzerverhalten beeinflusst System\n• Historischer Bias: Gesellschaftliche Vorurteile in Daten", example: "Amazon HR-Tool bevorzugte Männer (basierte auf historischen Bewerbungen, die männlich dominiert waren)" },
+            
+            { category: "Bias", priority: "must", title: "Bias-Mitigation", content: "Wie Bias reduzieren:\n• Diverse, ausgewogene Trainingsdaten\n• Regelmäßige Audits und Tests\n• Transparenz in Entscheidungen\n• Diverse Entwicklerteams\n• Fairness-Metriken einbauen", example: "Fairness-Metrik: Prüfen ob Kreditvergabe-KI gleiche Approval-Rate für verschiedene Gruppen hat" },
+            
+            { category: "Black Box", priority: "must", title: "Black Box Problem", content: "Bei komplexen KI-Modellen (v.a. Deep Learning) ist nicht nachvollziehbar, WIE eine Entscheidung zustande kam", example: "Neuronales Netz mit 50 Millionen Parametern für Krebsdiagnose - keine klare Erklärung möglich, warum es 'Krebs' sagt" },
+            
+            { category: "Black Box", priority: "must", title: "Explainable AI (XAI)", content: "Methoden, um KI-Entscheidungen nachvollziehbar zu machen:\n• LIME: Local Interpretable Model-Agnostic Explanations\n• SHAP: SHapley Additive exPlanations\n• Attention Maps: Was hat das Modell 'angeschaut'?\n• Feature Importance: Welche Faktoren waren wichtig?", example: "Bei Kreditablehnung muss Bank erklären können, WARUM abgelehnt wurde (GDPR Anforderung)" },
+            
+            { category: "Black Box", priority: "must", title: "Trade-off: Performance vs. Interpretierbarkeit", content: "Dilemma:\n• High Performance: Deep Learning (Black Box)\n• High Interpretierbarkeit: Decision Trees, Linear Regression\n\nManagement-Frage: Was wiegt schwerer für den Use Case?", example: "Medizinische Diagnose: Interpretierbarkeit wichtiger (Arzt muss verstehen)\nFilm-Empfehlung: Performance wichtiger (Nutzer interessiert sich nicht für 'Warum')" },
+            
+            { category: "Daten", priority: "must", title: "Strukturierte vs. Unstrukturierte Daten", content: "• Strukturiert: Tabellen, Datenbanken (SQL) - klar organisiert\n• Semi-strukturiert: JSON, XML - teilweise organisiert\n• Unstrukturiert: Text, Bilder, Videos - keine feste Struktur\n\nWichtig: 80-90% aller Daten sind unstrukturiert!", example: "Strukturiert: Excel-Tabelle mit Kundendaten\nUnstrukturiert: E-Mails, Fotos, Sprachnachrichten" },
+            
+            { category: "Daten", priority: "must", title: "Datenqualität - ACCTR", content: "5 Dimensionen (Eselsbrücke: ACCTR):\n• Accuracy: Korrektheit\n• Completeness: Vollständigkeit\n• Consistency: Widerspruchsfreiheit\n• Timeliness: Aktualität\n• Relevance: Relevanz für Zweck\n\nRegel: 'Garbage In, Garbage Out'", example: "Schlechte Qualität: Kundendatenbank mit 30% fehlenden E-Mails, veralteten Adressen" },
+            
+            { category: "Daten", priority: "must", title: "Was sind Metadaten?", content: "'Daten über Daten' - beschreiben andere Daten", example: "Foto: Metadaten = Erstellungsdatum, GPS-Koordinaten, Kameramodell, Auflösung\nDokument: Autor, Änderungsdatum, Dateigröße" },
+            
+            { category: "Daten", priority: "must", title: "Data Governance", content: "Strategische Verwaltung von Daten im Unternehmen:\n• Datenqualität sichern\n• Compliance (GDPR)\n• Zugriffsrechte verwalten\n• Datenkatalog führen\n• Daten als strategisches Asset behandeln", example: "Chief Data Officer definiert: Wer darf welche Daten nutzen? Wie lange speichern? Wie Qualität sichern?" },
+            
+            { category: "AI Act", priority: "must", title: "Was ist der EU AI Act?", content: "EU-Verordnung zur Regulierung von KI (2024):\n• Ziel: Sicherheit und Grundrechte schützen\n• Ansatz: Risikobasiert\n• Gilt für alle KI-Systeme in der EU", example: "Erste umfassende KI-Regulierung weltweit - Vorbild für andere Länder" },
+            
+            { category: "AI Act", priority: "must", title: "AI Act Risikokategorien", content: "4 Stufen:\n• Unacceptable: VERBOTEN (Social Scoring, Manipulation)\n• High Risk: Strenge Anforderungen (Medizin, Justiz, HR, kritische Infrastruktur)\n• Limited Risk: Transparenzpflichten (Chatbots müssen sich zu erkennen geben)\n• Minimal Risk: Keine Regulierung (Spam-Filter, Videospiele)", example: "Chatbot muss dem Nutzer sagen 'Ich bin eine KI' (Limited Risk)" },
+            
+            { category: "AI Act", priority: "must", title: "AI Act Compliance", content: "Was Unternehmen tun müssen:\n• Risikobewertung durchführen\n• Dokumentation (Daten, Training, Tests)\n• Menschliche Aufsicht sicherstellen\n• Transparenz gegenüber Nutzern\n• Regelmäßige Audits\n\nStrafen: Bis zu 7% des weltweiten Umsatzes!", example: "HR-KI (High Risk): Muss dokumentieren welche Daten, wie trainiert, wie getestet, regelmäßige Bias-Audits" },
+            
+            { category: "Prompting", priority: "must", title: "Was ist Prompting?", content: "Art der Kommunikation mit LLMs durch geschickte Formulierung von Eingaben (Prompts)\n\nWichtig: LLMs haben keine klassische Programmierung - Verhalten wird durch Prompts gesteuert", example: "Schlecht: 'Schreib Text'\nGut: 'Schreibe einen professionellen LinkedIn-Post über KI-Trends, max. 200 Wörter, mit 3 konkreten Beispielen'" },
+            
+            { category: "Prompting", priority: "must", title: "Prompt Engineering Techniken", content: "5 Hauptmethoden:\n• Zero-Shot: Aufgabe ohne Beispiele\n• Few-Shot: Mit 2-5 Beispielen\n• Chain-of-Thought: 'Denk Schritt für Schritt'\n• Role Prompting: 'Du bist ein Experte für...'\n• Structured Output: 'Antworte im JSON-Format'", example: "Few-Shot:\n'Übersetze ins Förmliche:\nHey → Sehr geehrte Damen und Herren\nDanke → Vielen Dank\nBis bald →'" },
+            
+            { category: "Prompting", priority: "must", title: "In-Context Learning", content: "LLM lernt aus Beispielen im Prompt (NICHT durch Training)\n\nUnterschied zu Fine-Tuning: Keine Gewichtsänderung, nur Kontext\n\nVorteil: Flexibel, kein Training nötig", example: "Du gibst 3 Beispiele im Prompt wie Produktbeschreibungen aussehen sollen → LLM macht 4. genauso" },
+            
+            // SHOULD-KNOW (Häufig geprüft)
+            { category: "Grundlagen", priority: "should", title: "Historische Meilensteine", content: "• 1950: Turing-Test (Maschine intelligent?)\n• 1956: Begriff 'AI' geprägt (Dartmouth Conference)\n• 1997: Deep Blue besiegt Kasparov (Schach)\n• 2012: Deep Learning Durchbruch (ImageNet)\n• 2017: Transformer Architektur\n• 2022: ChatGPT - LLM Revolution", example: "AlexNet 2012: Erster großer Deep Learning Erfolg bei Bilderkennung" },
+            
+            { category: "Grundlagen", priority: "should", title: "Regelbasierte vs. Lernende Systeme", content: "• Regelbasiert: Programmierer definiert alle Regeln (wenn-dann)\n• ML: System lernt Regeln selbst aus Daten\n\nML ist flexibler, braucht aber viele Daten", example: "Spam-Filter früher: 'WENN Wort Viagra DANN Spam' (Regeln)\nHeute: ML lernt aus 1 Mio. markierten E-Mails selbst die Muster" },
+            
+            { category: "Grundlagen", priority: "should", title: "Stärken von KI", content: "✅ Mustererkennung in großen Datenmengen\n✅ Schnelle, konsistente Verarbeitung\n✅ 24/7 Verfügbarkeit\n✅ Skalierbarkeit\n✅ Keine Ermüdung bei repetitiven Aufgaben", example: "Radiologie-KI kann 10.000 Röntgenbilder pro Tag analysieren - Arzt schafft ~100" },
+            
+            { category: "Grundlagen", priority: "should", title: "Schwächen von KI", content: "❌ Braucht große Datenmengen\n❌ Kein echtes Verständnis/Kreativität\n❌ Schwierig bei neuen Situationen\n❌ Ethische Probleme (Bias, Transparenz)\n❌ Kann Kontext nicht wie Menschen erfassen", example: "KI kann Millionen Schachpartien lernen, versteht aber nicht das Konzept 'Spaß am Spiel'" },
+            
+            { category: "NLP", priority: "should", title: "Was ist NLP?", content: "Natural Language Processing - Teilbereich der KI für menschliche Sprache:\n• Verstehen\n• Interpretieren\n• Generieren", example: "Chatbots, Google Translate, Siri, Sentiment-Analyse in Social Media, automatische E-Mail-Antworten" },
+            
+            { category: "NLP", priority: "should", title: "NLP-Komponenten", content: "Wichtige Schritte:\n• Tokenisierung: Text in Wörter/Teile zerlegen\n• POS-Tagging: Wortarten erkennen (Nomen, Verb...)\n• Named Entity Recognition: Eigennamen finden\n• Sentiment-Analyse: Emotion erkennen\n• Syntax/Semantik: Grammatik und Bedeutung", example: "'Apple verkauft iPhones' → Apple = Firma (NER), verkauft = Verb (POS), positiver Kontext (Sentiment)" },
+            
+            { category: "NLP", priority: "should", title: "Transformer & LLMs", content: "• Transformer: Moderne NLP-Architektur (2017)\n• Nutzt Attention-Mechanismus (kann auf relevante Teile fokussieren)\n• LLM: Large Language Models - riesige Transformer mit Milliarden Parametern", example: "GPT-4, Claude, BERT sind alle Transformer-basiert\n'Attention is All You Need' Paper 2017 = Revolution" },
+            
+            { category: "Projektmanagement", priority: "should", title: "KI-Potenzial bewerten", content: "✅ Geeignet wenn:\n• Repetitive, regelbasierte Aufgaben\n• Große Datenmengen vorhanden\n• Muster erkennbar\n• Klares Ziel/Metrik\n\n❌ Ungeeignet wenn:\n• Hohe Kreativität nötig\n• Wenig Daten\n• Ethisch sehr kritisch", example: "Gut: Rechnungsprüfung (repetitiv, viele Daten)\nSchlecht: Künstlerische Konzeption (Kreativität)" },
+            
+            { category: "Projektmanagement", priority: "should", title: "ROI-Berechnung für KI", content: "Faktoren:\n• Kosten: Daten, Infrastruktur, Talente, Zeit\n• Nutzen: Effizienz↑, Umsatz↑, Kundenzufriedenheit↑\n• Risiken: Fehlschläge, Bias, Regulierung\n\nFaustregel: Proof of Concept vor Vollausbau!", example: "Chatbot PoC: 3 Monate, 50k€ → testet ob 30% Support-Anfragen automatisierbar" },
+            
+            { category: "Projektmanagement", priority: "should", title: "KI-Projektverlauf (6 Phasen)", content: "1. Problem Definition: Was soll gelöst werden?\n2. Daten: Sammlung, Cleaning, Exploration\n3. Modellierung: Algorithmus wählen, trainieren\n4. Evaluation: Testen, validieren\n5. Deployment: Produktivbetrieb\n6. Monitoring: Laufende Überwachung", example: "Häufiger Fehler: Phase 6 vergessen → Model Drift nicht erkannt!" },
+            
+            { category: "Wirtschaft", priority: "should", title: "KI-Geschäftsmodelle", content: "Wie KI Wert schafft:\n• Kostenreduktion: Automatisierung\n• Umsatzsteigerung: Personalisierung, neue Produkte\n• Risikominimierung: Fraud Detection, Predictive Maintenance\n• Kundenerlebnis: Chatbots, Empfehlungen", example: "Amazon: Empfehlungssystem steigert Umsatz um ~35%" },
+            
+            { category: "Wirtschaft", priority: "should", title: "Total Cost of Ownership (TCO) für KI", content: "Oft unterschätzte Kosten:\n• Infrastruktur (Cloud/Hardware)\n• Datenmanagement (Cleaning, Storage)\n• Talente (Data Scientists sind teuer!)\n• Wartung und Retraining\n• Compliance und Sicherheit\n\nWichtig: Ongoing Costs oft > Initial Investment", example: "ML-Modell entwickeln: 100k€\nBetrieb über 3 Jahre: 300k€ (Cloud, Monitoring, Retraining)" },
+            
+            { category: "Risiken", priority: "should", title: "Top KI-Risiken", content: "• Technisch: Fehler, Model Drift\n• Rechtlich: GDPR, Haftung, AI Act\n• Ethisch: Bias, Diskriminierung\n• Sicherheit: Adversarial Attacks, Datenlecks\n• Wirtschaftlich: ROI nicht erreicht", example: "Microsoft Tay Chatbot 2016: Wurde rassistisch durch User-Manipulation (innerhalb 24h abgeschaltet)" },
+            
+            { category: "Risiken", priority: "should", title: "KI-Chancen", content: "Strategische Vorteile:\n• Wettbewerbsvorteile durch Innovation\n• Neue Geschäftsfelder erschließen\n• Skalierung ohne proportionale Kosten\n• Bessere Entscheidungen (datengetrieben)\n• Innovation beschleunigen", example: "Netflix: KI-Empfehlungen sparen jährlich ~1 Mrd. $ durch reduzierte Churn-Rate" },
+            
+            { category: "Risiken", priority: "should", title: "Risikomanagement für KI", content: "Best Practices:\n• Klare Governance-Strukturen\n• Regelmäßige Audits (Bias, Performance)\n• Human-in-the-Loop bei kritischen Entscheidungen\n• Transparenz und Dokumentation\n• Incident Response Pläne", example: "Kreditvergabe-KI: Finale Entscheidung immer durch Mensch (Human-in-the-Loop)" },
+            
+            { category: "Entwicklung", priority: "should", title: "Build vs. Buy vs. Partner", content: "3 Strategien:\n• Build: Eigene Entwicklung (hohe Kontrolle, hohe Kosten)\n• Buy: Fertige Lösungen kaufen (schnell, weniger Flexibilität)\n• Partner: Mit Experten zusammenarbeiten (Balance)\n\nEntscheidung: Kernkompetenz? Differenzierung?", example: "Bank: Fraud Detection = Build (Kernkompetenz)\nChatbot = Buy (Standard-Tool reicht)" },
+            
+            { category: "ML Vertiefung", priority: "should", title: "Training, Validation, Test Sets", content: "Datenaufteilung:\n• Training (60-80%): Modell lernt hier\n• Validation (10-20%): Hyperparameter tunen\n• Test (10-20%): Finale Bewertung\n\nGolden Rule: NIE mit Test-Daten trainieren!", example: "10.000 Bilder: 7.000 Training, 1.500 Validation, 1.500 Test" },
+            
+            { category: "ML Vertiefung", priority: "should", title: "Overfitting vs. Underfitting", content: "• Overfitting: Modell lernt Training auswendig (inkl. Rauschen) → schlecht auf neuen Daten\n• Underfitting: Modell zu simpel → selbst Training schlecht\n\nLösung Overfitting: Mehr Daten, Regularisierung, einfacheres Modell", example: "Overfitting: Wie Schüler der auswendig lernt aber nicht versteht\nUnderfitting: Wie zu simple Formel für komplexes Problem" },
+            
+            { category: "ML Vertiefung", priority: "should", title: "Evaluationsmetriken", content: "Je nach Task:\n• Klassifikation: Accuracy, Precision, Recall, F1-Score, AUC\n• Regression: MSE, RMSE, MAE, R²\n\nWahl hängt vom Business-Ziel ab!", example: "Fraud Detection: Recall wichtiger (alle Betrugsfälle finden)\nSpam-Filter: Precision wichtiger (kein echter E-Mail als Spam)" },
+            
+            { category: "ML Vertiefung", priority: "should", title: "Cross-Validation", content: "Daten in k Teile splitten, k-mal trainieren (jedes Mal anderer Teil als Test)\n\nVorteil: Robustere Bewertung, nutzt alle Daten\n\nStandard: 5-fold oder 10-fold", example: "5-fold: Daten in 5 Teile → 5x trainieren, jedes Mal 4 Teile Training, 1 Teil Test → Durchschnitt bilden" },
+            
+            { category: "KI Qualität", priority: "should", title: "KI Trash - Red Flags", content: "Warnsignale:\n🚩 Keine klare Business-Frage\n🚩 Schlechte/wenig Daten\n🚩 Unrealistische Erwartungen ('AGI in 6 Monaten')\n🚩 Fehlende Expertise im Team\n🚩 Keine Deployment-Infrastruktur\n🚩 Ethische Bedenken ignoriert", example: "'Wir machen jetzt auch KI' ohne konkreten Use Case = Red Flag" },
+            
+            { category: "KI Qualität", priority: "should", title: "KI Gold - Erfolgsrezept", content: "Merkmale erfolgreicher Projekte:\n✅ Klares, messbares Ziel\n✅ Qualitativ hochwertige, relevante Daten\n✅ Interdisziplinäres Team (Tech + Domain + Business)\n✅ Stakeholder-Buy-In von Anfang an\n✅ Iteratives Vorgehen (PoC → Pilot → Scale)\n✅ Ethik und Compliance von Anfang an", example: "Beispiel Gold-Projekt: 'Reduce Customer Churn um 15% in 12 Monaten durch Predictive Model'" },
+            
+            { category: "KI Qualität", priority: "should", title: "Quick Wins vs. Strategic Bets", content: "KI-Portfolio-Balance:\n• Quick Wins: Niedrig hängende Früchte, schneller ROI (z.B. FAQ-Chatbot)\n• Strategic Bets: Langfristig, hoher Impact, höheres Risiko (z.B. Autonomous Systems)\n\nBalance wichtig für Momentum + Transformation", example: "Quick Win: OCR für Rechnungen (3 Monate)\nStrategic Bet: Autonome Qualitätskontrolle (2 Jahre)" },
+            
+            // NICE-TO-KNOW (Vertiefung)
+            { category: "Deep Learning", priority: "nice", title: "Neuronale Netze Grundlagen", content: "Aufbau:\n• Neuronen: Gewichtete Summe von Inputs + Aktivierungsfunktion\n• Schichten: Input → Hidden Layer(s) → Output\n• Lernen: Backpropagation - Fehler rückwärts propagieren, Gewichte anpassen", example: "Jedes Neuron ist wie ein kleiner Entscheider, Millionen zusammen = komplexe Entscheidungen" },
+            
+            { category: "Deep Learning", priority: "nice", title: "Aktivierungsfunktionen", content: "Haupttypen:\n• ReLU: max(0, x) - Standard für Hidden Layers\n• Sigmoid: 0-1 Output - Binäre Klassifikation\n• Softmax: Wahrscheinlichkeitsverteilung - Multi-Class\n• Tanh: -1 bis 1", example: "Output-Layer für Katze/Hund: Sigmoid (0 = Katze, 1 = Hund)\nKatze/Hund/Vogel: Softmax (Wahrscheinlichkeit für jede Klasse)" },
+            
+            { category: "Deep Learning", priority: "nice", title: "CNNs - Convolutional Neural Networks", content: "Spezialisiert auf Bilder:\n• Convolutional Layers: Erkennen lokale Muster (Kanten, Texturen)\n• Pooling: Dimensionsreduktion\n• Weniger Parameter als Fully Connected\n\nStandard für Computer Vision", example: "ImageNet-Klassifikation: ResNet, VGG sind CNNs\nErstes Layer erkennt Kanten, tiefere Layers komplexere Objekte" },
+            
+            { category: "Deep Learning", priority: "nice", title: "RNNs - Recurrent Neural Networks", content: "Für Sequenzen:\n• 'Gedächtnis' durch Feedback-Schleifen\n• Wofür: Text, Zeitreihen, Audio\n• Varianten: LSTM, GRU (lösen Vanishing Gradient)\n\nHeute oft durch Transformer ersetzt", example: "Aktienkurs-Vorhersage: RNN nutzt vergangene Kurse für Prognose\nÜbersetzung (früher): Satz Wort für Wort mit Kontext" },
+            
+            { category: "Deep Learning", priority: "nice", title: "Gradient Descent", content: "Optimierungsalgorithmus zum Minimieren der Loss-Function:\n1. Berechne Gradienten (Richtung steilster Anstieg)\n2. Gehe in Richtung steilster Abstieg\n3. Wiederhole\n\nVarianten: Batch, Stochastic, Mini-Batch, Adam", example: "Wie Skifahrer der im Nebel den Berg runter will: Immer Richtung steilster Abstieg" },
+            
+            { category: "ML Vertiefung", priority: "nice", title: "Hyperparameter Tuning", content: "Parameter, die VOR Training festgelegt werden:\n• Learning Rate, Netzwerktiefe, Batch Size, etc.\n\nMethoden:\n• Grid Search: Alle Kombinationen\n• Random Search: Zufällig sampeln\n• Bayesian Optimization: Intelligent suchen\n\nAuf Validation Set tunen!", example: "Learning Rate: Zu hoch = springt über Minimum, zu niedrig = lernt ewig" },
+            
+            { category: "IoT", priority: "nice", title: "Was ist IoT?", content: "Internet of Things - physische Geräte mit:\n• Sensoren (messen)\n• Vernetzung (kommunizieren)\n• Datenverarbeitung (analysieren)\n\nKI-Verbindung: IoT generiert Daten → KI analysiert → intelligente Aktionen", example: "Smart Home: Thermostat lernt deine Muster, Kühlschrank bestellt selbst nach" },
+            
+            { category: "IoT", priority: "nice", title: "Edge Computing vs. Cloud", content: "Wo wird verarbeitet?\n• Cloud: Daten in Rechenzentrum (zentral, viel Power)\n• Edge: Am Gerät/nahe Sensor (niedrige Latenz, Datenschutz)\n\nKI am Edge: Für Echtzeitanwendungen", example: "Autonomes Auto: Entscheidungen müssen in Millisekunden fallen → KI am Edge (im Auto)" },
+            
+            { category: "IoT", priority: "nice", title: "Sensordaten für KI - Herausforderungen", content: "Probleme:\n• Rauschen: Sensoren ungenau\n• Drift: Kalibrierung ändert sich über Zeit\n• Hohe Frequenz: Viele Daten (Speicher/Bandbreite)\n• Preprocessing wichtig: Filterung, Aggregation", example: "Temperatursensor im Werk: Schwankt um ±2°C → Glättung durch Moving Average nötig" },
+            
+            { category: "Datenverwaltung", priority: "nice", title: "Datenquellen", content: "Woher kommen Daten?\n• Intern: CRM, ERP, Logs, Sensoren\n• Extern: Open Data, APIs, Kaufdaten, Web Scraping\n• Synthetisch: Künstlich generiert\n\nWichtig: Rechtliche Klärung (GDPR, Lizenzen)!", example: "Startup ohne viele Daten: Kann synthetische Daten für Training generieren" },
+            
+            { category: "Datenverwaltung", priority: "nice", title: "Data Pipeline", content: "5 Schritte:\n1. Ingestion: Daten sammeln\n2. Storage: Speichern (Data Lake/Warehouse)\n3. Cleaning: Fehler beheben, Duplikate weg\n4. Transformation: Format anpassen, Features\n5. Analysis: Nutzen für ML/Analytics", example: "E-Commerce: Logs sammeln → S3 speichern → Duplikate entfernen → Sessionisieren → Empfehlungen trainieren" },
+            
+            { category: "Datenverwaltung", priority: "nice", title: "Data Lake vs. Data Warehouse", content: "Unterschied:\n• Data Lake: Rohdaten, alle Formate, günstig, flexibel (Big Data)\n• Data Warehouse: Strukturierte Daten, optimiert für Abfragen (BI)\n\nTrend: Data Lakehouse (Kombination)", example: "Lake: Hadoop mit Petabytes Logs, Bilder, Videos\nWarehouse: SQL-Datenbank für Sales-Reports" },
+            
+            { category: "Datenverwaltung", priority: "nice", title: "ETL vs. ELT", content: "Prozesse:\n• ETL: Extract, Transform, Load - Transformation VOR Speicherung\n• ELT: Extract, Load, Transform - Transformation NACH Speicherung\n\nTrend: ELT (Cloud macht Speicher billig)", example: "Früher: ETL (Speicher teuer)\nHeute: ELT (Transform on Demand in Cloud Warehouse)" },
+            
+            { category: "Entwicklung", priority: "nice", title: "MLOps", content: "Machine Learning Operations - DevOps für ML:\n• Versionierung (Code + Daten + Modelle)\n• CI/CD für ML\n• Monitoring\n• Retraining-Pipelines\n\nZiel: ML-Modelle zuverlässig in Produktion", example: "MLflow, Kubeflow für MLOps\nTracke: Welches Modell, welche Daten, welche Performance → Reproduzierbarkeit" },
+            
+            { category: "Entwicklung", priority: "nice", title: "Model Drift", content: "Performance von ML-Modellen verschlechtert sich über Zeit:\n• Data Drift: Input ändert sich\n• Concept Drift: Zusammenhänge ändern sich\n\nLösung: Monitoring und regelmäßiges Retraining", example: "COVID-19: Kaufverhalten änderte sich radikal → E-Commerce-Modelle mussten retrained werden" },
+            
+            { category: "LLMs", priority: "nice", title: "Token & Context Window", content: "• Token: Texteinheit (~4 Zeichen oder 0,75 Wörter)\n• Context Window: Max. Token, die LLM verarbeiten kann\n\nGPT-4 Turbo: 128k Tokens ≈ 96.000 Wörter\n\nKosten: Meist pro Token", example: "'Hallo Welt' = ~3 Tokens\n100 Seiten Buch ≈ 100k Tokens" },
+            
+            { category: "LLMs", priority: "nice", title: "Temperature & Top-p", content: "LLM-Parameter:\n• Temperature (0-2): Kreativität (0 = deterministisch, 2 = sehr kreativ/random)\n• Top-p (0-1): Nucleus Sampling (0.9 = Top 90% Wahrscheinlichkeit)\n\nUse Cases: Analyse = niedrig, Kreativität = hoch", example: "Rechtstext analysieren: Temperature 0.1 (konsistent)\nGedicht schreiben: Temperature 1.5 (kreativ)" },
+            
+            { category: "LLMs", priority: "nice", title: "RAG - Retrieval Augmented Generation", content: "LLM + externe Wissensdatenbank:\n1. Nutzer-Frage\n2. Relevante Docs aus DB suchen\n3. Docs + Frage an LLM\n4. LLM generiert Antwort basierend auf Docs\n\nVorteil: Aktuelles Wissen, kein Retraining", example: "Firmen-Chatbot: RAG mit internen Dokumenten → beantwortet Policy-Fragen korrekt" },
+            
+            { category: "LLMs", priority: "nice", title: "Fine-Tuning vs. Prompting", content: "Vergleich:\n• Prompting: Verhalten durch Eingabe steuern (günstig, flexibel)\n• Fine-Tuning: Modell mit eigenen Daten nachtrainieren (teuer, spezifisch)\n\nStrategie: Prompting first, Fine-Tuning wenn wirklich nötig", example: "Customer Support: Meist reicht Prompting\nMedizinische Diagnose mit spezieller Terminologie: Fine-Tuning sinnvoll" },
+            
+            { category: "LLMs", priority: "nice", title: "Halluzinationen in LLMs", content: "LLM generiert überzeugende, aber falsche Informationen\n\nGrund: LLMs generieren wahrscheinlichen Text, kein Fakten-Check\n\nMitigation:\n• RAG (mit Quellen)\n• Fact-Checking Layer\n• Temperature senken\n• 'Ich weiß nicht' erlauben", example: "ChatGPT erfindet manchmal Quellen, die überzeugend klingen aber nicht existieren" },
+            
+            { category: "LLMs", priority: "nice", title: "Embeddings", content: "Vektorielle Repräsentation von Text (oder Bildern):\n• Hochdimensionaler Raum (z.B. 1536 Dimensionen)\n• Semantisch ähnlich = ähnliche Vektoren\n\nAnwendung: Suche, RAG, Clustering, Empfehlungen", example: "'Hund' und 'Katze' haben ähnlichere Embeddings als 'Hund' und 'Auto'\n→ Semantische Suche findet ähnliche Bedeutungen" }
+        ];
+
+        let currentIndex = 0;
+        let filteredCards = [...flashcards];
+        let isFlipped = false;
+        let masteryStats = { hard: 0, good: 0, easy: 0 };
+
+        function updateStats() {
+            document.getElementById('totalCards').textContent = filteredCards.length;
+            document.getElementById('hardCards').textContent = masteryStats.hard;
+            document.getElementById('goodCards').textContent = masteryStats.good;
+            document.getElementById('easyCards').textContent = masteryStats.easy;
+        }
+
+        function loadCard() {
+            const card = filteredCards[currentIndex];
+            isFlipped = false;
+            document.getElementById('flashcard').classList.remove('flipped');
+            
+            // Front
+            document.getElementById('categoryFront').textContent = card.category;
+            document.getElementById('categoryBack').textContent = card.category;
+            document.getElementById('cardTitleFront').textContent = card.title;
+            
+            // Priority badge
+            const priorityMap = {
+                must: { class: 'priority-must', text: '🔥 MUST-KNOW' },
+                should: { class: 'priority-should', text: '⚠️ SHOULD-KNOW' },
+                nice: { class: 'priority-nice', text: '💡 NICE-TO-KNOW' }
+            };
+            const priority = priorityMap[card.priority];
+            document.getElementById('priorityBadge').innerHTML = 
+                `<span class="priority-tag ${priority.class}">${priority.text}</span>`;
+            
+            // Back
+            document.getElementById('cardContent').innerHTML = card.content.replace(/\n/g, '<br>');
+            
+            if (card.example) {
+                document.getElementById('cardExample').style.display = 'block';
+                document.getElementById('exampleText').textContent = card.example;
+            } else {
+                document.getElementById('cardExample').style.display = 'none';
+            }
+            
+            // Update counter and progress
+            document.getElementById('cardCounter').textContent = `${currentIndex + 1} / ${filteredCards.length}`;
+            const progress = ((currentIndex + 1) / filteredCards.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            
+            // Update navigation buttons
+            document.getElementById('prevBtn').disabled = currentIndex === 0;
+            document.getElementById('nextBtn').disabled = currentIndex === filteredCards.length - 1;
+        }
+
+        function flipCard() {
+            isFlipped = !isFlipped;
+            document.getElementById('flashcard').classList.toggle('flipped');
+        }
+
+        function nextCard() {
+            if (currentIndex < filteredCards.length - 1) {
+                currentIndex++;
+                loadCard();
+            }
+        }
+
+        function prevCard() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                loadCard();
+            }
+        }
+
+        function shuffleCards() {
+            filteredCards.sort(() => Math.random() - 0.5);
+            currentIndex = 0;
+            loadCard();
+        }
+
+        function filterCards(type) {
+            // Update active button
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Filter cards
+            if (type === 'all') {
+                filteredCards = [...flashcards];
+            } else if (type === 'hard') {
+                // Filter cards marked as hard (stored in localStorage)
+                const hardCards = JSON.parse(localStorage.getItem('hardCards') || '[]');
+                filteredCards = flashcards.filter((_, i) => hardCards.includes(i));
+            } else {
+                filteredCards = flashcards.filter(card => card.priority === type);
+            }
+            
+            currentIndex = 0;
+            updateStats();
+            loadCard();
+        }
+
+        function markCard(level) {
+            masteryStats[level]++;
+            
+            // Store hard cards in localStorage
+            if (level === 'hard') {
+                const hardCards = JSON.parse(localStorage.getItem('hardCards') || '[]');
+                const originalIndex = flashcards.indexOf(filteredCards[currentIndex]);
+                if (!hardCards.includes(originalIndex)) {
+                    hardCards.push(originalIndex);
+                    localStorage.setItem('hardCards', JSON.stringify(hardCards));
+                }
+            }
+            
+            updateStats();
+            
+            // Auto-advance to next card
+            if (currentIndex < filteredCards.length - 1) {
+                setTimeout(nextCard, 300);
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') prevCard();
+            if (e.key === 'ArrowRight') nextCard();
+            if (e.key === ' ') { e.preventDefault(); flipCard(); }
+            if (e.key === '1') markCard('hard');
+            if (e.key === '2') markCard('good');
+            if (e.key === '3') markCard('easy');
+        });
+
+        // Initialize
+        updateStats();
+        loadCard();
+    </script>
+</body>
+</html>

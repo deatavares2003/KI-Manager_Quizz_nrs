@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KI-Manager Quiz</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .score-display {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+            color: #333;
+        }
+        
+        .question-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .question-number {
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+        
+        .question-text {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+        
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .option {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .option:hover {
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+        
+        .option.selected {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .option.correct {
+            border-color: #4caf50;
+            background: #e8f5e9;
+        }
+        
+        .option.incorrect {
+            border-color: #f44336;
+            background: #ffebee;
+        }
+        
+        .option-letter {
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .option.correct .option-letter {
+            background: #4caf50;
+        }
+        
+        .option.incorrect .option-letter {
+            background: #f44336;
+        }
+        
+        .option-text {
+            flex: 1;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            justify-content: center;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .explanation {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .explanation.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .explanation-title {
+            font-weight: bold;
+            color: #856404;
+            margin-bottom: 8px;
+        }
+        
+        .results {
+            text-align: center;
+            display: none;
+        }
+        
+        .results.show {
+            display: block;
+        }
+        
+        .results h2 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+        
+        .results-score {
+            font-size: 4em;
+            font-weight: bold;
+            color: #764ba2;
+            margin: 30px 0;
+        }
+        
+        .results-message {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .category-breakdown {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        
+        .category-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .category-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 KI-Manager Quiz</h1>
+        <p class="subtitle">Teste dein Wissen über Klassifizierung & Methoden</p>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        
+        <div class="score-display" id="scoreDisplay">Frage 1 von 30 | Score: 0/0</div>
+        
+        <div id="quizContent">
+            <div class="question-card">
+                <div class="question-number" id="questionNumber">Frage 1</div>
+                <div class="question-text" id="questionText"></div>
+                <div class="options" id="optionsContainer"></div>
+                <div class="explanation" id="explanation">
+                    <div class="explanation-title">💡 Erklärung:</div>
+                    <div id="explanationText"></div>
+                </div>
+            </div>
+            
+            <div class="buttons">
+                <button id="checkBtn" onclick="checkAnswer()">Antwort prüfen</button>
+                <button id="nextBtn" onclick="nextQuestion()" style="display: none;">Nächste Frage →</button>
+            </div>
+        </div>
+        
+        <div class="results" id="results">
+            <h2>🎉 Quiz abgeschlossen!</h2>
+            <div class="results-score" id="finalScore"></div>
+            <div class="results-message" id="resultsMessage"></div>
+            <div class="category-breakdown" id="categoryBreakdown"></div>
+            <div class="buttons">
+                <button onclick="restartQuiz()">🔄 Nochmal versuchen</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                category: "Grundlagen",
+                question: "Was ist der Hauptunterschied zwischen schwacher und starker KI?",
+                options: [
+                    "Schwache KI ist langsamer als starke KI",
+                    "Schwache KI ist auf spezifische Aufgaben spezialisiert, starke KI hätte menschenähnliche Intelligenz über alle Bereiche",
+                    "Schwache KI benötigt weniger Daten als starke KI",
+                    "Schwache KI funktioniert ohne Internet, starke KI braucht Cloud"
+                ],
+                correct: 1,
+                explanation: "Schwache KI (ANI - Artificial Narrow Intelligence) ist auf spezifische Aufgaben spezialisiert (z.B. Schach, Spracherkennung). Starke KI (AGI - Artificial General Intelligence) ist hypothetisch und würde menschenähnliche Intelligenz über alle Bereiche hinweg besitzen. Alle aktuellen KI-Systeme sind schwache KI."
+            },
+            {
+                category: "Machine Learning",
+                question: "Bei welchem ML-Typ lernt das System aus markierten Trainingsdaten?",
+                options: [
+                    "Unsupervised Learning",
+                    "Reinforcement Learning",
+                    "Supervised Learning",
+                    "Transfer Learning"
+                ],
+                correct: 2,
+                explanation: "Supervised Learning arbeitet mit gelabelten Daten, bei denen die richtige Antwort bereits bekannt ist (z.B. Bilder mit der Markierung 'Katze' oder 'Hund'). Das Modell lernt, Eingaben auf Ausgaben zu mappen."
+            },
+            {
+                category: "Bias",
+                question: "Welche Aussage über Bias in KI ist FALSCH?",
+                options: [
+                    "Bias kann durch nicht-repräsentative Trainingsdaten entstehen",
+                    "Bias ist nur ein Problem bei der Entwicklung, nicht im Produktivbetrieb",
+                    "Diverse Entwicklerteams können helfen, Bias zu reduzieren",
+                    "Historischer Bias bedeutet, dass gesellschaftliche Vorurteile in Daten enthalten sind"
+                ],
+                correct: 1,
+                explanation: "Bias ist NICHT nur ein Entwicklungsproblem - es kann sich über Zeit verschlimmern (durch Interaktions-Bias) und muss kontinuierlich im Produktivbetrieb überwacht werden. Regelmäßige Audits sind essentiell."
+            },
+            {
+                category: "Black Box",
+                question: "Was ist das Hauptproblem des 'Black Box' Phänomens?",
+                options: [
+                    "KI-Modelle sind zu langsam",
+                    "Man kann nicht nachvollziehen, WIE eine Entscheidung zustande kam",
+                    "KI-Modelle brauchen zu viel Speicherplatz",
+                    "Black Box bedeutet, dass die KI nicht funktioniert"
+                ],
+                correct: 1,
+                explanation: "Bei komplexen Modellen (v.a. Deep Learning mit Millionen Parametern) ist nicht nachvollziehbar, welche Features zu welcher Entscheidung geführt haben. Dies ist kritisch in regulierten Bereichen wie Medizin oder Justiz, wo Erklärbarkeit gefordert wird."
+            },
+            {
+                category: "NLP",
+                question: "Was sind Transformer im Kontext von NLP?",
+                options: [
+                    "Roboter, die Text in Sprache umwandeln",
+                    "Eine moderne NLP-Architektur, die auf Attention-Mechanismus basiert",
+                    "Ein Tool zum Übersetzen zwischen Programmiersprachen",
+                    "Hardware für schnellere Textverarbeitung"
+                ],
+                correct: 1,
+                explanation: "Transformer sind eine 2017 eingeführte Architektur ('Attention is All You Need'), die den Attention-Mechanismus nutzt, um Kontext zu verstehen. Sie sind die Basis für moderne LLMs wie GPT, BERT, Claude etc."
+            },
+            {
+                category: "Daten",
+                question: "Was bedeutet 'Garbage In, Garbage Out' im KI-Kontext?",
+                options: [
+                    "KI kann Müll sortieren",
+                    "Schlechte Datenqualität führt zu schlechten Ergebnissen",
+                    "Alte Daten müssen regelmäßig gelöscht werden",
+                    "KI-Modelle erzeugen viel Datenmüll"
+                ],
+                correct: 1,
+                explanation: "Diese Regel besagt: Die Qualität der KI-Ergebnisse hängt direkt von der Qualität der Trainingsdaten ab. Selbst das beste Modell kann mit schlechten, unvollständigen oder fehlerhaften Daten keine guten Ergebnisse liefern."
+            },
+            {
+                category: "Daten",
+                question: "Was sind Metadaten?",
+                options: [
+                    "Sehr große Datenmengen",
+                    "Daten über Daten, die andere Daten beschreiben",
+                    "Daten aus dem Metaverse",
+                    "Fehlerhafte Daten"
+                ],
+                correct: 1,
+                explanation: "Metadaten beschreiben andere Daten, z.B. Erstellungsdatum, Autor, Dateigröße, GPS-Koordinaten eines Fotos. Sie sind wichtig für Organisation, Suche und Compliance."
+            },
+            {
+                category: "Projektmanagement",
+                question: "Was ist der erste Schritt in einem KI-Projekt?",
+                options: [
+                    "Daten sammeln",
+                    "Problem klar definieren",
+                    "Modell trainieren",
+                    "Team zusammenstellen"
+                ],
+                correct: 1,
+                explanation: "Die Problemdefinition ist der wichtigste erste Schritt. Ohne klares Verständnis, welches Problem gelöst werden soll, werden alle weiteren Schritte ineffizient oder führen in die falsche Richtung."
+            },
+            {
+                category: "Wirtschaft",
+                question: "Welche Kostenart wird bei KI-Projekten oft unterschätzt?",
+                options: [
+                    "Initiale Entwicklungskosten",
+                    "Laufende Wartungs- und Retraining-Kosten",
+                    "Hardware-Kosten",
+                    "Lizenzkosten für Software"
+                ],
+                correct: 1,
+                explanation: "Viele Unternehmen unterschätzen die Ongoing Costs: Wartung, Monitoring, regelmäßiges Retraining (wegen Model Drift), Datenmanagement, Compliance-Updates. Diese können höher sein als die initialen Entwicklungskosten!"
+            },
+            {
+                category: "Risiken",
+                question: "Was ist Model Drift?",
+                options: [
+                    "Wenn das Modell zu langsam wird",
+                    "Wenn sich die Performance über Zeit verschlechtert, weil sich Daten/Welt ändern",
+                    "Wenn das Modell zu viel Speicher nutzt",
+                    "Wenn das Modell in die Cloud verschoben wird"
+                ],
+                correct: 1,
+                explanation: "Model Drift tritt auf, wenn sich die Daten oder die zugrundeliegenden Muster ändern (z.B. Kundenverhalten, Marktbedingungen). Das Modell wurde auf 'alte Welt' trainiert und passt nicht mehr zur 'neuen Welt'. Lösung: Monitoring und regelmäßiges Retraining."
+            },
+            {
+                category: "AI Act",
+                question: "In welche Risikokategorie fällt ein KI-System für Social Scoring nach dem EU AI Act?",
+                options: [
+                    "Minimal Risk",
+                    "Limited Risk",
+                    "High Risk",
+                    "Unacceptable Risk"
+                ],
+                correct: 3,
+                explanation: "Social Scoring (Bewertung von Bürgern nach Verhalten wie in China) ist unter dem EU AI Act VERBOTEN (Unacceptable Risk), da es fundamentale Grundrechte verletzt."
+            },
+            {
+                category: "AI Act",
+                question: "Was müssen Anbieter von High-Risk KI-Systemen nachweisen?",
+                options: [
+                    "Nur dass das System funktioniert",
+                    "Umfassende Dokumentation, Tests, menschliche Aufsicht, Risikomanagement",
+                    "Dass es billiger ist als Alternativen",
+                    "Nur eine CE-Kennzeichnung"
+                ],
+                correct: 1,
+                explanation: "High-Risk Systeme (z.B. in Medizin, Justiz, HR, kritischer Infrastruktur) unterliegen strengen Anforderungen: Risikobewertung, Dokumentation, Datenqualität, menschliche Aufsicht, Transparenz, Cybersicherheit, regelmäßige Audits."
+            },
+            {
+                category: "Datenverwaltung",
+                question: "Was ist der Unterschied zwischen Data Lake und Data Warehouse?",
+                options: [
+                    "Kein Unterschied, nur andere Namen",
+                    "Data Lake speichert Rohdaten aller Formate, Data Warehouse strukturierte Daten für Abfragen",
+                    "Data Lake ist größer als Data Warehouse",
+                    "Data Lake ist nur für KI, Data Warehouse nur für BI"
+                ],
+                correct: 1,
+                explanation: "Data Lake: Speichert Rohdaten in jedem Format (strukturiert, unstrukturiert), günstig, flexibel für Big Data und ML. Data Warehouse: Strukturierte, vorverarbeitete Daten, optimiert für schnelle Abfragen und Business Intelligence."
+            },
+            {
+                category: "Machine Learning",
+                question: "Was ist Overfitting?",
+                options: [
+                    "Wenn das Modell zu komplex ist und Trainingsdaten 'auswendig lernt'",
+                    "Wenn zu viele Daten verwendet werden",
+                    "Wenn das Training zu lange dauert",
+                    "Wenn das Modell zu groß für den Speicher ist"
+                ],
+                correct: 0,
+                explanation: "Overfitting: Das Modell lernt nicht nur Muster, sondern auch Rauschen und Zufälligkeiten der Trainingsdaten auswendig. Resultat: Perfekt auf Trainingsdaten, schlecht auf neuen Daten. Lösung: Mehr Daten, Regularisierung, Cross-Validation, einfacheres Modell."
+            },
+            {
+                category: "Machine Learning",
+                question: "Wofür wird ein Validation Set verwendet?",
+                options: [
+                    "Für das finale Testen des Modells",
+                    "Für das Training des Modells",
+                    "Für das Tunen von Hyperparametern während der Entwicklung",
+                    "Für die Produktion"
+                ],
+                correct: 2,
+                explanation: "Training Set: Modell lernen. Validation Set: Hyperparameter optimieren und Modellauswahl während Entwicklung. Test Set: Finale, unabhängige Bewertung. Wichtig: Test-Daten NIEMALS für Training oder Tuning verwenden!"
+            },
+            {
+                category: "Evaluierung",
+                question: "Bei einem Fraud-Detection System ist welche Metrik am wichtigsten?",
+                options: [
+                    "Accuracy (Gesamtgenauigkeit)",
+                    "Precision (Präzision)",
+                    "Recall (Sensitivität)",
+                    "F1-Score"
+                ],
+                correct: 2,
+                explanation: "Bei Fraud Detection ist Recall kritisch: Man will ALLE Betrugsfälle finden (auch wenn man dafür mehr False Positives in Kauf nimmt). Recall = True Positives / (True Positives + False Negatives). Ein übersehener Betrug kann teurer sein als mehrere False Alarms."
+            },
+            {
+                category: "Deep Learning",
+                question: "Welche Aktivierungsfunktion wird standardmäßig in Hidden Layers verwendet?",
+                options: [
+                    "Sigmoid",
+                    "Softmax",
+                    "ReLU",
+                    "Linear"
+                ],
+                correct: 2,
+                explanation: "ReLU (Rectified Linear Unit: max(0, x)) ist der Standard für Hidden Layers wegen: Einfachheit, Geschwindigkeit, vermeidet Vanishing Gradient Problem. Sigmoid/Softmax für Output Layers, je nach Task."
+            },
+            {
+                category: "Deep Learning",
+                question: "Wofür werden CNNs (Convolutional Neural Networks) hauptsächlich verwendet?",
+                options: [
+                    "Textverarbeitung",
+                    "Zeitreihenanalyse",
+                    "Bilderkennung und Computer Vision",
+                    "Spracherkennung"
+                ],
+                correct: 2,
+                explanation: "CNNs sind spezialisiert auf Bilderkennung: Sie nutzen Convolutional Layers, um lokale Muster (Kanten, Texturen) zu erkennen und haben weniger Parameter als fully connected Networks. Standard für Computer Vision Tasks."
+            },
+            {
+                category: "IoT",
+                question: "Was ist Edge Computing?",
+                options: [
+                    "Computing am Rand des Internets",
+                    "Datenverarbeitung am Gerät/nahe dem Sensor statt in der Cloud",
+                    "Eine neue Art von Prozessor",
+                    "Cloud Computing für IoT"
+                ],
+                correct: 1,
+                explanation: "Edge Computing: Verarbeitung direkt am Gerät oder nahe beim Datenursprung (statt zentral in der Cloud). Vorteile: Niedrige Latenz, Datenschutz, weniger Bandbreite. Wichtig für Echtzeitanwendungen wie autonome Fahrzeuge."
+            },
+            {
+                category: "KI Qualität",
+                question: "Was ist ein 'Quick Win' im KI-Portfolio?",
+                options: [
+                    "Ein Projekt, das in einer Woche fertig ist",
+                    "Ein Projekt mit niedrig hängenden Früchten und schnellem ROI",
+                    "Ein billiges Projekt",
+                    "Ein Projekt ohne Risiken"
+                ],
+                correct: 1,
+                explanation: "Quick Wins: Projekte mit relativ geringem Aufwand und schnellem, messbarem Nutzen (z.B. Chatbot für FAQs). Sie schaffen Momentum und Buy-In. Balance mit Strategic Bets (langfristig, höherer Impact) ist wichtig für gesundes KI-Portfolio."
+            },
+            {
+                category: "Prompting",
+                question: "Was ist Few-Shot Learning im Kontext von LLMs?",
+                options: [
+                    "Das Modell braucht nur wenige Trainingsdaten",
+                    "Man gibt dem Modell einige Beispiele im Prompt",
+                    "Das Modell wird mit wenigen Parametern trainiert",
+                    "Man stellt nur wenige Fragen"
+                ],
+                correct: 1,
+                explanation: "Few-Shot Learning: Man gibt dem LLM einige Beispiele (z.B. 2-5) der gewünschten Aufgabe direkt im Prompt. Das Modell lernt aus diesen Beispielen ohne Retraining. Unterschied zu Zero-Shot (keine Beispiele) und Fine-Tuning (tatsächliches Training)."
+            },
+            {
+                category: "Prompting",
+                question: "Was ist Chain-of-Thought Prompting?",
+                options: [
+                    "Mehrere Prompts hintereinander senden",
+                    "Das Modell bitten, Schritt für Schritt zu denken",
+                    "Eine Kette von verschiedenen Modellen nutzen",
+                    "Automatische Prompt-Generierung"
+                ],
+                correct: 1,
+                explanation: "Chain-of-Thought: Man fordert das LLM auf, Zwischenschritte explizit zu zeigen ('Denk Schritt für Schritt', 'Let's think step by step'). Dies verbessert die Leistung bei komplexen Reasoning-Tasks erheblich."
+            },
+            {
+                category: "LLMs",
+                question: "Was ist RAG (Retrieval Augmented Generation)?",
+                options: [
+                    "Ein neues LLM-Modell",
+                    "LLM kombiniert mit externer Wissensdatenbank",
+                    "Eine Methode zum schnelleren Training",
+                    "Ein Sicherheitsprotokoll für LLMs"
+                ],
+                correct: 1,
+                explanation: "RAG: Nutzer-Frage → Relevante Dokumente aus Datenbank suchen → Dokumente + Frage an LLM → LLM generiert Antwort basierend auf Docs. Vorteil: Aktuelles/spezifisches Wissen ohne Retraining, reduziert Halluzinationen."
+            },
+            {
+                category: "LLMs",
+                question: "Was sind LLM-Halluzinationen?",
+                options: [
+                    "Wenn das LLM zu kreativ wird",
+                    "Wenn das LLM überzeugende, aber falsche Informationen generiert",
+                    "Wenn das LLM visuelle Inhalte verarbeitet",
+                    "Ein Fehler in der Software"
+                ],
+                correct: 1,
+                explanation: "Halluzinationen: LLMs generieren statistisch wahrscheinlichen Text, nicht faktisch korrekten. Sie können sehr überzeugend falsche Fakten, Zitate oder Quellen erfinden. Mitigation: RAG, Fact-Checking, Temperature senken, 'Ich weiß nicht' erlauben."
+            },
+            {
+                category: "LLMs",
+                question: "Was ist der Context Window bei LLMs?",
+                options: [
+                    "Das Fenster im Browser",
+                    "Die maximale Anzahl von Tokens, die das Modell verarbeiten kann",
+                    "Die Zeit, die das Modell braucht",
+                    "Der Speicher des Modells"
+                ],
+                correct: 1,
+                explanation: "Context Window: Maximale Anzahl Tokens (≈ Wörter), die das LLM auf einmal verarbeiten kann. Z.B. GPT-4 Turbo: 128k Tokens ≈ 96.000 Wörter. Alles außerhalb dieses Fensters 'sieht' das Modell nicht."
+            },
+            {
+                category: "NLP",
+                question: "Was sind Embeddings?",
+                options: [
+                    "Eingebettete Bilder in Text",
+                    "Vektorielle Repräsentation von Text im hochdimensionalen Raum",
+                    "Eine Komprimierungsmethode",
+                    "Metadaten von Dokumenten"
+                ],
+                correct: 1,
+                explanation: "Embeddings: Text (oder Bilder) wird als Vektor dargestellt. Semantisch ähnliche Texte haben ähnliche Vektoren. Anwendung: Semantische Suche, RAG, Clustering, Empfehlungssysteme. Modelle: OpenAI ada, Sentence-BERT."
+            },
+            {
+                category: "Projektmanagement",
+                question: "Was ist MLOps?",
+                options: [
+                    "Machine Learning Operations - DevOps für ML",
+                    "Ein neues ML-Framework",
+                    "ML für Operations Management",
+                    "Ein Cloud-Service"
+                ],
+                correct: 0,
+                explanation: "MLOps: Praktiken und Tools für ML in Produktion. Umfasst: Versionierung (Code + Daten + Modelle), CI/CD für ML, Monitoring, Retraining-Pipelines, A/B Testing. Ziel: ML-Systeme zuverlässig, reproduzierbar und skalierbar betreiben."
+            },
+            {
+                category: "Daten",
+                question: "Was ist Data Governance?",
+                options: [
+                    "Regierungsvorschriften für Daten",
+                    "Strategisches Management von Daten: Qualität, Sicherheit, Compliance, Zugriff",
+                    "Ein Datenschutzgesetz",
+                    "Software für Datenbanken"
+                ],
+                correct: 1,
+                explanation: "Data Governance: Framework für strategische Datenverwaltung im Unternehmen. Umfasst: Datenqualität sichern, Compliance (GDPR), Zugriffsrechte verwalten, Datenkatalog führen, Daten als strategisches Asset behandeln."
+            },
+            {
+                category: "Wirtschaft",
+                question: "Was ist der häufigste Grund für das Scheitern von KI-Projekten?",
+                options: [
+                    "Zu wenig Budget",
+                    "Fehlende oder schlechte Daten",
+                    "Falsche Algorithmen",
+                    "Zu wenig Zeit"
+                ],
+                correct: 1,
+                explanation: "Studien zeigen: Schlechte Datenqualität/Datenverfügbarkeit ist der Hauptgrund für KI-Projektversagen. Ohne gute Daten funktioniert selbst der beste Algorithmus nicht. 'Garbage In, Garbage Out' - Daten sind das Fundament!"
+            },
+            {
+                category: "Grundlagen",
+                question: "Was ist der Unterschied zwischen regelbasierten Systemen und Machine Learning?",
+                options: [
+                    "Regelbasiert ist neuer",
+                    "Bei regelbasiert definiert der Programmierer alle Regeln, bei ML lernt das System Regeln aus Daten",
+                    "ML ist immer besser",
+                    "Kein Unterschied"
+                ],
+                correct: 1,
+                explanation: "Regelbasiert: Wenn-Dann-Regeln werden manuell programmiert (z.B. 'Wenn Email Wort Viagra enthält → Spam'). ML: System findet Regeln selbst durch Lernen aus Daten. ML ist flexibler, braucht aber viele Daten und ist schwerer zu debuggen."
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let selectedOption = null;
+        let answered = false;
+        let categoryScores = {};
+
+        function initQuiz() {
+            // Shuffle questions
+            questions.sort(() => Math.random() - 0.5);
+            // Initialize category scores
+            questions.forEach(q => {
+                if (!categoryScores[q.category]) {
+                    categoryScores[q.category] = { correct: 0, total: 0 };
+                }
+                categoryScores[q.category].total++;
+            });
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const q = questions[currentQuestion];
+            document.getElementById('questionNumber').textContent = `Frage ${currentQuestion + 1} von ${questions.length} | Kategorie: ${q.category}`;
+            document.getElementById('questionText').textContent = q.question;
+            
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+            
+            q.options.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'option';
+                optionDiv.onclick = () => selectOption(index);
+                optionDiv.innerHTML = `
+                    <div class="option-letter">${String.fromCharCode(65 + index)}</div>
+                    <div class="option-text">${option}</div>
+                `;
+                optionsContainer.appendChild(optionDiv);
+            });
+            
+            updateProgress();
+            updateScore();
+            
+            // Reset state
+            selectedOption = null;
+            answered = false;
+            document.getElementById('checkBtn').style.display = 'inline-block';
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('explanation').classList.remove('show');
+        }
+
+        function selectOption(index) {
+            if (answered) return;
+            
+            selectedOption = index;
+            const options = document.querySelectorAll('.option');
+            options.forEach((opt, i) => {
+                opt.classList.remove('selected');
+                if (i === index) {
+                    opt.classList.add('selected');
+                }
+            });
+        }
+
+        function checkAnswer() {
+            if (selectedOption === null) {
+                alert('Bitte wähle eine Antwort aus!');
+                return;
+            }
+            
+            answered = true;
+            const q = questions[currentQuestion];
+            const options = document.querySelectorAll('.option');
+            
+            // Show correct/incorrect
+            options.forEach((opt, i) => {
+                if (i === q.correct) {
+                    opt.classList.add('correct');
+                } else if (i === selectedOption) {
+                    opt.classList.add('incorrect');
+                }
+                opt.style.pointerEvents = 'none';
+            });
+            
+            // Update score
+            if (selectedOption === q.correct) {
+                score++;
+                categoryScores[q.category].correct++;
+            }
+            
+            // Show explanation
+            document.getElementById('explanationText').textContent = q.explanation;
+            document.getElementById('explanation').classList.add('show');
+            
+            // Show next button
+            document.getElementById('checkBtn').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'inline-block';
+            
+            updateScore();
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            
+            if (currentQuestion < questions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function updateProgress() {
+            const progress = ((currentQuestion) / questions.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        function updateScore() {
+            const answered = currentQuestion + (this.answered ? 0 : 0);
+            document.getElementById('scoreDisplay').textContent = 
+                `Frage ${currentQuestion + 1} von ${questions.length} | Score: ${score}/${currentQuestion + (answered ? 1 : 0)}`;
+        }
+
+        function showResults() {
+            document.getElementById('quizContent').style.display = 'none';
+            document.getElementById('results').classList.add('show');
+            
+            const percentage = Math.round((score / questions.length) * 100);
+            document.getElementById('finalScore').textContent = `${percentage}%`;
+            
+            let message = '';
+            if (percentage >= 90) {
+                message = '🌟 Exzellent! Du bist bestens vorbereitet für die Prüfung!';
+            } else if (percentage >= 75) {
+                message = '👍 Sehr gut! Du hast ein solides Verständnis. Noch ein paar Details vertiefen.';
+            } else if (percentage >= 60) {
+                message = '📚 Gut gemacht! Du bist auf dem richtigen Weg. Fokussiere dich auf die schwachen Kategorien.';
+            } else {
+                message = '💪 Nicht aufgeben! Gehe die Karteikarten nochmal durch und konzentriere dich auf die Basics.';
+            }
+            document.getElementById('resultsMessage').textContent = message;
+            
+            // Category breakdown
+            let breakdownHTML = '<h3 style="margin-bottom: 15px;">📊 Ergebnisse nach Kategorie:</h3>';
+            for (const [category, scores] of Object.entries(categoryScores)) {
+                const catPercentage = Math.round((scores.correct / scores.total) * 100);
+                const emoji = catPercentage >= 75 ? '✅' : catPercentage >= 50 ? '⚠️' : '❌';
+                breakdownHTML += `
+                    <div class="category-item">
+                        <span>${emoji} ${category}</span>
+                        <span><strong>${scores.correct}/${scores.total}</strong> (${catPercentage}%)</span>
+                    </div>
+                `;
+            }
+            document.getElementById('categoryBreakdown').innerHTML = breakdownHTML;
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            categoryScores = {};
+            document.getElementById('quizContent').style.display = 'block';
+            document.getElementById('results').classList.remove('show');
+            initQuiz();
+        }
+
+        // Start quiz
+        initQuiz();
+    </script>
+</body>
+</html>
